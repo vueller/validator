@@ -1,0 +1,44 @@
+{
+  "name": "@vueller/validator",
+  "version": "1.0.0",
+  "description": "A clean, modular validation library with reactive i18n support and Vue 3 integration",
+  "main": "src/index.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:vueller/validator.git"
+  },
+  "homepage": "https://github.com/vueller/validator",
+  "bugs": {
+    "url": "https://github.com/vueller/validator/issues"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "validation",
+    "vue3",
+    "forms",
+    "validator",
+    "reactive",
+    "i18n",
+    "javascript"
+  ],
+  "author": "Vueller",
+  "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "jest": "^29.0.0",
+    "rollup": "^3.0.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-vue": "^6.0.0"
+  }
+}
