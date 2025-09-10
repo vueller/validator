@@ -218,6 +218,48 @@ async function runTests() {
   console.assert(isValid === false, '❌ Invalid pattern should fail');
   console.log('✅ Invalid pattern fails');
 
+  // Test 11: Unknown Rules (Warning instead of Error)
+  console.log('\n=== Test 11: Unknown Rules Handling ===');
+  const unknownRuleValidator = new Validator();
+  
+  // Mock console.warn to capture warnings
+  const originalWarn = console.warn;
+  let warningMessage = '';
+  console.warn = (message) => {
+    warningMessage = message;
+  };
+  
+  try {
+    // Set rules including an unknown rule
+    unknownRuleValidator.setRules('phone', {
+      required: true,
+      phone: true,  // This rule doesn't exist
+      min: 10
+    });
+    
+    // This should work without throwing an error
+    isValid = await unknownRuleValidator.validateField('phone', '123456789');
+    
+    // Should fail because of min rule (length < 10) and required passes
+    console.assert(isValid === false, '❌ Field should fail min rule');
+    console.log('✅ Unknown rule is ignored, other rules still work');
+    
+    // Check that warning was logged
+    console.assert(warningMessage.includes('Unknown validation rule: phone'), '❌ Should log warning about unknown rule');
+    console.log('✅ Warning is logged for unknown rule');
+    
+    // Test with valid value (meets min rule)
+    isValid = await unknownRuleValidator.validateField('phone', '1234567890');
+    console.assert(isValid === true, '❌ Field should pass when meeting valid rules');
+    console.log('✅ Validation works correctly when unknown rule is ignored');
+    
+  } catch (error) {
+    console.assert(false, `❌ Should not throw error for unknown rule: ${error.message}`);
+  }
+  
+  // Restore console.warn
+  console.warn = originalWarn;
+
   console.log('\n🎉 All tests passed! The validator is working correctly.');
 }
 

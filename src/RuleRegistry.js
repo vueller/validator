@@ -57,7 +57,7 @@ export class RuleRegistry {
    * Create a rule instance from a rule definition
    * @param {string} name - The rule name
    * @param {any} params - Parameters for the rule
-   * @returns {Object} Rule instance or custom rule object
+   * @returns {Object|null} Rule instance, custom rule object, or null if rule is unknown
    */
   create(name, params = null) {
     // Check if it's a built-in rule
@@ -90,7 +90,9 @@ export class RuleRegistry {
       };
     }
 
-    throw new Error(`Unknown validation rule: ${name}`);
+    // Instead of throwing an error, log a warning and return null
+    console.warn(`Unknown validation rule: ${name}. This rule will be ignored.`);
+    return null;
   }
 
   /**
@@ -108,10 +110,16 @@ export class RuleRegistry {
       for (const [ruleName, ruleValue] of Object.entries(rules)) {
         if (ruleValue === false) continue; // Skip disabled rules
         
+        let ruleInstance;
         if (ruleValue === true) {
-          ruleInstances.push(this.create(ruleName));
+          ruleInstance = this.create(ruleName);
         } else {
-          ruleInstances.push(this.create(ruleName, ruleValue));
+          ruleInstance = this.create(ruleName, ruleValue);
+        }
+        
+        // Only add valid rule instances (filter out null values from unknown rules)
+        if (ruleInstance !== null) {
+          ruleInstances.push(ruleInstance);
         }
       }
       
@@ -121,20 +129,23 @@ export class RuleRegistry {
     // Handle array format: ['required', 'min:5', 'max:15']
     if (Array.isArray(rules)) {
       return rules.map(rule => {
+        let ruleInstance;
         if (typeof rule === 'string') {
-          return this.parseStringRule(rule);
+          ruleInstance = this.parseStringRule(rule);
         } else if (typeof rule === 'object') {
           // Handle rule objects in array
           const [ruleName, ruleParams] = Object.entries(rule)[0];
-          return this.create(ruleName, ruleParams);
+          ruleInstance = this.create(ruleName, ruleParams);
+        } else {
+          ruleInstance = rule; // Assume it's already a rule instance
         }
-        return rule; // Assume it's already a rule instance
-      });
+        return ruleInstance;
+      }).filter(rule => rule !== null); // Filter out null values from unknown rules
     }
 
     // Handle string format: 'required|min:5|max:15'
     if (typeof rules === 'string') {
-      return rules.split('|').map(rule => this.parseStringRule(rule));
+      return rules.split('|').map(rule => this.parseStringRule(rule)).filter(rule => rule !== null);
     }
 
     return [];
@@ -143,7 +154,7 @@ export class RuleRegistry {
   /**
    * Parse a single string rule
    * @param {string} rule - Rule string like 'min:5' or 'required'
-   * @returns {Object} Rule instance
+   * @returns {Object|null} Rule instance or null if rule is unknown
    */
   parseStringRule(rule) {
     const [ruleName, ...params] = rule.split(':');
