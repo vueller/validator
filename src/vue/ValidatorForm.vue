@@ -1,7 +1,8 @@
 <template>
   <form @submit.prevent="handleSubmit" :class="formClasses">
     <slot 
-      :errors="errors"
+      :errors="validator.errors()"
+      :errorData="errors"
       :isValidating="isValidating"
       :isValid="isValid"
       :hasErrors="hasErrors"

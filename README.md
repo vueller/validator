@@ -53,6 +53,8 @@ if (!isValid) {
 
 ### Vue 3 Integration
 
+#### Using ValidatorForm Component
+
 ```vue
 <template>
   <ValidatorForm 
@@ -64,10 +66,10 @@ if (!isValid) {
       <input
         v-model="formData.email"
         type="email"
-        :class="{ 'error': errors.has('email') }"
+        :class="{ 'error': errors.has('email').value }"
       />
-      <div v-if="errors.has('email')">
-        {{ errors.first('email') }}
+      <div v-if="errors.has('email').value">
+        {{ errors.first('email').value }}
       </div>
       
       <button type="submit" :disabled="isValidating">
@@ -105,6 +107,21 @@ export default {
 };
 </script>
 ```
+
+#### Slot Properties
+
+The ValidatorForm component exposes the following properties in its default slot:
+
+- **`errors`** - ErrorBag instance with reactive methods:
+  - `errors.has(field).value` - Check if field has errors
+  - `errors.first(field).value` - Get first error message
+  - `errors.get(field).value` - Get all errors for field
+- **`errorData`** - Reactive object with errors grouped by field
+- **`isValidating`** - Boolean indicating if validation is in progress
+- **`isValid`** - Boolean indicating if form is valid
+- **`hasErrors`** - Boolean indicating if there are any errors
+- **`validateField(field, value)`** - Function to validate a single field
+- **`reset()`** - Function to reset form and clear errors
 
 ## Built-in Validation Rules
 
