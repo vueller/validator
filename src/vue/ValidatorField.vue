@@ -20,7 +20,7 @@
 
 <script>
 import { computed, inject } from 'vue';
-import { ValidatorSymbol } from './index.js';
+import { ValidatorSymbol } from './composables.js';
 
 export default {
   name: 'ValidatorField',

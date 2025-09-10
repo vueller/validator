@@ -21,7 +21,8 @@ export default [
     input: 'src/index.js',
     output: {
       file: 'dist/validator.cjs.js',
-      format: 'cjs'
+      format: 'cjs',
+      exports: 'named'
     },
     plugins: [
       nodeResolve(),

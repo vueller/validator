@@ -14,7 +14,7 @@
 
 <script>
 import { computed } from 'vue';
-import { useValidator } from './index.js';
+import { useValidator } from './composables.js';
 
 export default {
   name: 'ValidatorForm',
@@ -176,6 +176,7 @@ export default {
     }
 
     return {
+      validator,
       formData,
       errors,
       isValidating,

@@ -3,13 +3,11 @@
  * Provides directives and composables for seamless form validation
  */
 
-import { ref, reactive, computed, inject, provide } from 'vue';
+import { inject } from 'vue';
 import { Validator } from '../core/index.js';
 import ValidatorForm from './ValidatorForm.vue';
 import ValidatorField from './ValidatorField.vue';
-
-// Symbol for providing validator instance
-export const ValidatorSymbol = Symbol('validator');
+import { ValidatorSymbol, useValidator } from './composables.js';
 
 /**
  * Vue 3 directive for field validation
@@ -57,25 +55,6 @@ export const rulesDirective = {
   }
 };
 
-/**
- * Composable for using reactive validator in Vue components
- * @param {Object} options - Validator options
- * @returns {Object} Reactive validator utilities
- */
-export function useValidator(options = {}) {
-  const validator = new Validator(options);
-  
-  // Get all reactive state from validator
-  const reactiveState = validator.getReactiveState();
-
-  // Provide validator instance for child components
-  provide(ValidatorSymbol, validator);
-
-  return {
-    validator,
-    ...reactiveState
-  };
-}
 
 /**
  * Helper function to get field name from element
@@ -132,8 +111,8 @@ export function install(app, options = {}) {
   }
 }
 
-// Export components
-export { ValidatorForm, ValidatorField };
+// Export components and composables
+export { ValidatorForm, ValidatorField, useValidator, ValidatorSymbol };
 
 // Default export for plugin installation
 export default {
