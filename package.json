@@ -2,11 +2,27 @@
   "name": "@vueller/validator",
   "version": "1.0.0",
   "description": "A clean, modular validation library with reactive i18n support and Vue 3 integration",
-  "main": "src/index.js",
+  "main": "dist/validator.cjs.js",
+  "module": "dist/validator.esm.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/validator.esm.js",
+      "require": "./dist/validator.cjs.js"
+    },
+    "./vue": {
+      "import": "./dist/validator-vue.esm.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:vueller/validator.git"
+    "url": "git+ssh://git@github.com/vueller/validator.git"
   },
   "homepage": "https://github.com/vueller/validator",
   "bugs": {
