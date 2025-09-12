@@ -1,5 +1,11 @@
 <template>
-  <form @submit.prevent="handleSubmit" :class="formClasses">
+  <form 
+    @submit.prevent="handleSubmit" 
+    :class="formClasses"
+    data-validator-form
+    :data-validator-blur-disabled="!computedValidateOnBlur"
+    :data-validator-input-disabled="!computedValidateOnInput"
+  >
     <slot 
       :errors="validator.errors()"
       :errorData="errors"
@@ -45,19 +51,19 @@ export default {
     },
 
     /**
-     * Whether to validate fields on blur
+     * Whether to validate fields on blur (overrides global setting)
      */
     validateOnBlur: {
       type: Boolean,
-      default: true
+      default: null // null means use global setting
     },
 
     /**
-     * Whether to validate fields on input
+     * Whether to validate fields on input (overrides global setting)
      */
     validateOnInput: {
       type: Boolean,
-      default: false
+      default: null // null means use global setting
     },
 
     /**
@@ -169,10 +175,45 @@ export default {
       return classes;
     });
 
+    // Computed validateOnBlur - considers both global config and form prop
+    const computedValidateOnBlur = computed(() => {
+      // Form prop takes priority over global config
+      if (props.validateOnBlur !== null) {
+        return props.validateOnBlur;
+      }
+      
+      // Get global config from validator
+      const globalConfig = validator.getGlobalConfig?.() || {};
+      return globalConfig.validateOnBlur !== false; // Default to true
+    });
+
+    // Computed validateOnInput - considers both global config and form prop  
+    const computedValidateOnInput = computed(() => {
+      // Form prop takes priority over global config
+      if (props.validateOnInput !== null) {
+        return props.validateOnInput;
+      }
+      
+      // Get global config from validator
+      const globalConfig = validator.getGlobalConfig?.() || {};
+      return globalConfig.validateOnInput === true; // Default to false
+    });
+
     // Setup field validation events if enabled
     if (props.validateOnBlur || props.validateOnInput) {
       // This would be implemented with event delegation
       // For now, we'll leave this as a placeholder for future enhancement
+    }
+
+    // Expose methods for external access (like in step-by-step components)
+    const expose = {
+      validator,
+      validateAll: () => validateAll(formData),
+      reset,
+      isValid,
+      hasErrors,
+      errors,
+      formData
     }
 
     return {
@@ -185,24 +226,26 @@ export default {
       validateField,
       handleSubmit,
       reset,
-      formClasses
+      formClasses,
+      computedValidateOnBlur,
+      computedValidateOnInput,
+      
+      // For template ref access
+      ...expose
     };
   }
 };
 </script>
 
 <style scoped>
-.has-errors {
-  /* Add visual indication for forms with errors */
-}
-
-.is-valid {
-  /* Add visual indication for valid forms */
-}
-
 .is-validating {
   /* Add visual indication for forms being validated */
   pointer-events: none;
   opacity: 0.7;
 }
+
+/* Additional classes can be added here for:
+   .has-errors - visual indication for forms with errors
+   .is-valid - visual indication for valid forms
+*/
 </style>

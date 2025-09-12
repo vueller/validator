@@ -10,8 +10,9 @@ import ValidatorField from './ValidatorField.vue';
 import { ValidatorSymbol, useValidator } from './composables.js';
 
 /**
- * Vue 3 directive for field validation
+ * Vue 3 directive for field validation with auto-validation on blur
  * Usage: <input v-rules="{ required: true, min: 5 }" v-model="value" />
+ * Global config controls blur validation behavior
  */
 export const rulesDirective = {
   created(el, binding, vnode) {
@@ -34,9 +35,13 @@ export const rulesDirective = {
     // Store field info on element for later use
     el._validatorField = fieldName;
     el._validatorRules = binding.value;
+    el._validatorInstance = validator;
+
+    // Setup validation events if enabled globally
+    setupValidationEvents(el, validator, fieldName);
   },
 
-  updated(el, binding) {
+  updated(el, binding, vnode) {
     const validator = inject(ValidatorSymbol);
     if (!validator || !el._validatorField) return;
 
@@ -45,6 +50,9 @@ export const rulesDirective = {
       validator.setRules(el._validatorField, binding.value);
       el._validatorRules = binding.value;
     }
+
+    // Re-setup validation events in case global config changed
+    setupValidationEvents(el, validator, el._validatorField);
   },
 
   unmounted(el) {
@@ -52,8 +60,138 @@ export const rulesDirective = {
     if (validator && el._validatorField) {
       validator.removeRules(el._validatorField);
     }
+    
+    // Remove validation event listeners
+    if (el._blurHandler) {
+      el.removeEventListener('blur', el._blurHandler);
+      delete el._blurHandler;
+    }
+    if (el._inputHandler) {
+      el.removeEventListener('input', el._inputHandler);
+      delete el._inputHandler;
+    }
   }
 };
+
+/**
+ * Setup validation events for an element (blur and input)
+ * @param {HTMLElement} el - The DOM element
+ * @param {Validator} validator - The validator instance
+ * @param {string} fieldName - The field name
+ */
+function setupValidationEvents(el, validator, fieldName) {
+  // Remove existing handlers if any
+  if (el._blurHandler) {
+    el.removeEventListener('blur', el._blurHandler);
+    delete el._blurHandler;
+  }
+  if (el._inputHandler) {
+    el.removeEventListener('input', el._inputHandler);
+    delete el._inputHandler;
+  }
+
+  // Get global config
+  const globalConfig = validator.getGlobalConfig ? validator.getGlobalConfig() : {};
+  
+  // Check form-level configuration
+  const formElement = el.closest('form[data-validator-form]');
+  
+  // Determine blur validation setting
+  const formDisablesBlur = formElement && formElement.dataset.validatorBlurDisabled === 'true';
+  const validateOnBlur = (globalConfig.validateOnBlur !== false) && !formDisablesBlur; // Default to true
+  
+  // Determine input validation setting  
+  const formDisablesInput = formElement && formElement.dataset.validatorInputDisabled === 'true';
+  const validateOnInput = (globalConfig.validateOnInput === true) && !formDisablesInput; // Default to false
+
+  // Create validation handler function
+  const createValidationHandler = (eventType) => {
+    return async function(event) {
+      const value = event.target.value;
+      
+      // Get all form data for cross-field validation
+      const formData = getFormData(el);
+      
+      try {
+        await validator.validateField(fieldName, value, formData);
+        
+        // Add visual feedback classes
+        updateFieldClasses(el, validator, fieldName);
+      } catch (error) {
+        console.error(`Validation error for field ${fieldName} on ${eventType}:`, error);
+      }
+    };
+  };
+
+  // Setup blur validation
+  if (validateOnBlur) {
+    el._blurHandler = createValidationHandler('blur');
+    el.addEventListener('blur', el._blurHandler);
+  }
+
+  // Setup input validation
+  if (validateOnInput) {
+    // Debounce input validation to avoid excessive API calls
+    let inputTimeout;
+    el._inputHandler = function(event) {
+      clearTimeout(inputTimeout);
+      inputTimeout = setTimeout(() => {
+        createValidationHandler('input')(event);
+      }, 300); // 300ms debounce
+    };
+    el.addEventListener('input', el._inputHandler);
+  }
+}
+
+/**
+ * Get form data from the element's form
+ * @param {HTMLElement} el - The DOM element
+ * @returns {Object} Form data object
+ */
+function getFormData(el) {
+  const form = el.closest('form');
+  if (!form) return {};
+
+  const formData = {};
+  const formElements = form.querySelectorAll('input, select, textarea');
+  
+  formElements.forEach(element => {
+    if (element.name || element.id) {
+      const fieldName = element.name || element.id;
+      
+      if (element.type === 'checkbox') {
+        formData[fieldName] = element.checked;
+      } else if (element.type === 'radio') {
+        if (element.checked) {
+          formData[fieldName] = element.value;
+        }
+      } else {
+        formData[fieldName] = element.value;
+      }
+    }
+  });
+
+  return formData;
+}
+
+/**
+ * Update field CSS classes based on validation state
+ * @param {HTMLElement} el - The DOM element
+ * @param {Validator} validator - The validator instance
+ * @param {string} fieldName - The field name
+ */
+function updateFieldClasses(el, validator, fieldName) {
+  const errors = validator.errors();
+  
+  // Remove existing validation classes
+  el.classList.remove('valid', 'invalid', 'has-error');
+  
+  if (errors.has(fieldName)) {
+    el.classList.add('invalid', 'has-error');
+  } else {
+    el.classList.add('valid');
+  }
+}
 
 
 /**
@@ -90,8 +228,21 @@ function getFieldName(el, vnode) {
  * Plugin installation function
  * @param {Object} app - Vue app instance
  * @param {Object} options - Plugin options
+ * @param {boolean} options.globalValidator - Create global validator instance
+ * @param {boolean} options.globalProperties - Add $validator to global properties
+ * @param {boolean} options.validateOnBlur - Enable blur validation globally (default: true)
+ * @param {boolean} options.validateOnInput - Enable input validation globally (default: false)
+ * @param {string} options.locale - Default locale
  */
 export function install(app, options = {}) {
+  // Default options
+  const config = {
+    validateOnBlur: true,
+    validateOnInput: false,
+    locale: 'en',
+    ...options
+  };
+
   // Register directive
   app.directive('rules', rulesDirective);
 
@@ -100,15 +251,29 @@ export function install(app, options = {}) {
   app.component('ValidatorField', ValidatorField);
 
   // Provide global validator if requested
-  if (options.globalValidator) {
-    const globalValidator = new Validator(options);
+  if (config.globalValidator) {
+    const globalValidator = new Validator(config);
+    
+    // Add global configuration method
+    globalValidator.getGlobalConfig = () => config;
+    globalValidator.setGlobalConfig = (newConfig) => {
+      Object.assign(config, newConfig);
+    };
+    
     app.provide(ValidatorSymbol, globalValidator);
+    
+    // Make config available globally
+    app.config.globalProperties.$validatorConfig = config;
   }
 
   // Add global properties if requested
-  if (options.globalProperties) {
+  if (config.globalProperties) {
     app.config.globalProperties.$validator = useValidator;
+    app.config.globalProperties.$validatorConfig = config;
   }
+
+  // Store config for directive access
+  app._validatorConfig = config;
 }
 
 // Export components and composables

@@ -2,7 +2,7 @@
  * Vue 3 composables for the Validator library
  */
 
-import { computed, inject, provide } from 'vue';
+import { provide } from 'vue';
 import { Validator } from '../core/index.js';
 
 // Symbol for providing validator instance
