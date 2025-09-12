@@ -1,7 +1,7 @@
 {
   "name": "@vueller/validator",
   "version": "1.2.0",
-  "description": "A clean, modular validation library with reactive i18n support, Vue 3 integration, and automatic blur/input validation",
+  "description": "Modern universal validation library with Vue 3, JavaScript support, and upcoming React & Angular integrations",
   "main": "dist/validator.cjs.js",
   "module": "dist/validator.esm.js",
   "type": "module",
@@ -32,20 +32,25 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "docs:dev": "cd docs && npm run dev",
+    "docs:build": "cd docs && npm run build",
+    "docs:preview": "cd docs && npm run preview"
   },
   "keywords": [
     "validation",
     "vue3",
+    "react",
+    "angular",
     "forms",
     "validator",
     "reactive",
     "i18n",
     "javascript",
+    "universal",
+    "multi-framework",
     "blur-validation",
     "input-validation",
-    "step-by-step",
-    "wizard",
     "auto-validation",
     "real-time"
   ],

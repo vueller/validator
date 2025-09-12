@@ -340,4 +340,28 @@ export class Validator {
   getValue(field) {
     return this.state.formData[field];
   }
+
+  /**
+   * Get global configuration
+   * @returns {Object} Current configuration options
+   */
+  getGlobalConfig() {
+    return { ...this.options };
+  }
+
+  /**
+   * Set global configuration
+   * @param {Object} newConfig - New configuration options
+   * @returns {Validator} Returns this for method chaining
+   */
+  setGlobalConfig(newConfig) {
+    Object.assign(this.options, newConfig);
+    
+    // Update locale if changed
+    if (newConfig.locale && newConfig.locale !== this.i18nManager.getLocale()) {
+      this.i18nManager.setLocale(newConfig.locale);
+    }
+    
+    return this;
+  }
 }

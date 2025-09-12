@@ -1,0 +1,15 @@
+{
+  "name": "validator-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Documentation for @vueller/validator",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "serve": "vitepress serve"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  }
+}

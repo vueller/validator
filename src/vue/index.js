@@ -97,12 +97,26 @@ function setupValidationEvents(el, validator, fieldName) {
   const formElement = el.closest('form[data-validator-form]');
   
   // Determine blur validation setting
-  const formDisablesBlur = formElement && formElement.dataset.validatorBlurDisabled === 'true';
-  const validateOnBlur = (globalConfig.validateOnBlur !== false) && !formDisablesBlur; // Default to true
+  let validateOnBlur = globalConfig.validateOnBlur !== false; // Default to true
+  if (formElement) {
+    const formBlurSetting = formElement.dataset.validatorBlurDisabled;
+    if (formBlurSetting === 'true') {
+      validateOnBlur = false;
+    } else if (formBlurSetting === 'false') {
+      validateOnBlur = true;
+    }
+  }
   
   // Determine input validation setting  
-  const formDisablesInput = formElement && formElement.dataset.validatorInputDisabled === 'true';
-  const validateOnInput = (globalConfig.validateOnInput === true) && !formDisablesInput; // Default to false
+  let validateOnInput = globalConfig.validateOnInput === true; // Default to false
+  if (formElement) {
+    const formInputSetting = formElement.dataset.validatorInputDisabled;
+    if (formInputSetting === 'true') {
+      validateOnInput = false;
+    } else if (formInputSetting === 'false') {
+      validateOnInput = true;
+    }
+  }
 
   // Create validation handler function
   const createValidationHandler = (eventType) => {

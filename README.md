@@ -1,16 +1,44 @@
 # @vueller/validator
 
-A clean, modular validation library with reactive i18n support and Vue 3 integration.
+> Modern universal validation library with Vue 3, JavaScript support, and upcoming React & Angular integrations.
 
-## Features
+[![npm version](https://img.shields.io/npm/v/@vueller/validator.svg)](https://www.npmjs.com/package/@vueller/validator)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-brightgreen.svg)](https://vuejs.org/)
 
-- ✅ **Reactive by Default**: Real-time validation updates and automatic UI synchronization
-- ✅ **Clean Architecture**: Modular design with organized file structure
-- ✅ **Reactive i18n**: Real-time language switching with automatic error message updates
-- ✅ **Vue 3 Ready**: First-class Vue 3 support with reactive directives and components
-- ✅ **Custom Rules**: Easy custom validation rule creation
-- ✅ **Tree Shaking**: Import only what you need
-- ✅ **TypeScript Ready**: Fully typed for excellent IDE support
+## What is it?
+
+A clean, modular validation library that provides:
+
+- **Universal Support** - Works with Vue 3, Vanilla JS, and coming soon: React & Angular
+- **Auto-validation** - Zero configuration validation with visual feedback
+- **Real-time i18n** - Instant language switching for error messages
+- **Custom Rules** - Easy to extend with your own validation logic
+- **TypeScript Ready** - Full type support out of the box
+
+## Quick Example
+
+### Vue 3
+```vue
+<template>
+  <input 
+    v-model="email" 
+    v-rules="{ required: true, email: true }" 
+    name="email" 
+  />
+</template>
+```
+
+### JavaScript
+```javascript
+import { Validator } from '@vueller/validator'
+
+const validator = new Validator()
+const isValid = await validator.validate('user@example.com', { 
+  required: true, 
+  email: true 
+})
+```
 
 ## Installation
 
@@ -18,192 +46,24 @@ A clean, modular validation library with reactive i18n support and Vue 3 integra
 npm install @vueller/validator
 ```
 
-## Quick Start
+## Documentation
 
-### Basic Usage
+**[📖 Full Documentation →](https://vueller.github.io/validator/)**
 
-```javascript
-import { createValidator } from '@vueller/validator';
-
-const validator = createValidator();
-
-// Set validation rules
-validator.setRules('email', {
-  required: true,
-  email: true
-});
-
-validator.setRules('password', {
-  required: true,
-  min: 8
-});
-
-// Validate form data
-const formData = {
-  email: 'user@example.com',
-  password: 'mypassword123'
-};
-
-const isValid = await validator.validateAll(formData);
-
-if (!isValid) {
-  console.log('Errors:', validator.errors().allByFieldStatic());
-}
-```
-
-### Vue 3 Integration
-
-#### Using ValidatorForm Component
-
-```vue
-<template>
-  <ValidatorForm 
-    v-model="formData" 
-    :rules="formRules" 
-    @submit="handleSubmit"
-  >
-    <template #default="{ errors, isValidating }">
-      <input
-        v-model="formData.email"
-        type="email"
-        :class="{ 'error': errors.has('email').value }"
-      />
-      <div v-if="errors.has('email').value">
-        {{ errors.first('email').value }}
-      </div>
-      
-      <button type="submit" :disabled="isValidating">
-        Submit
-      </button>
-    </template>
-  </ValidatorForm>
-</template>
-
-<script>
-import { reactive } from 'vue';
-import { ValidatorForm } from '@vueller/validator/vue';
-
-export default {
-  components: { ValidatorForm },
-  setup() {
-    const formData = reactive({
-      email: '',
-      password: ''
-    });
-
-    const formRules = {
-      email: { required: true, email: true },
-      password: { required: true, min: 8 }
-    };
-
-    const handleSubmit = ({ data, isValid }) => {
-      if (isValid) {
-        console.log('Form submitted:', data);
-      }
-    };
-
-    return { formData, formRules, handleSubmit };
-  }
-};
-</script>
-```
-
-#### Slot Properties
-
-The ValidatorForm component exposes the following properties in its default slot:
-
-- **`errors`** - ErrorBag instance with reactive methods:
-  - `errors.has(field).value` - Check if field has errors
-  - `errors.first(field).value` - Get first error message
-  - `errors.get(field).value` - Get all errors for field
-- **`errorData`** - Reactive object with errors grouped by field
-- **`isValidating`** - Boolean indicating if validation is in progress
-- **`isValid`** - Boolean indicating if form is valid
-- **`hasErrors`** - Boolean indicating if there are any errors
-- **`validateField(field, value)`** - Function to validate a single field
-- **`reset()`** - Function to reset form and clear errors
-
-## Built-in Validation Rules
-
-| Rule | Usage | Description |
-|------|-------|-------------|
-| `required` | `{ required: true }` | Field must have a value |
-| `min` | `{ min: 5 }` | Minimum length/value |
-| `max` | `{ max: 15 }` | Maximum length/value |
-| `email` | `{ email: true }` | Valid email format |
-| `numeric` | `{ numeric: true }` | Must be a number |
-| `pattern` | `{ pattern: /^[A-Z]+$/ }` | Regex validation |
-| `confirmed` | `{ confirmed: 'fieldName' }` | Must match another field |
-
-## Custom Rules
-
-```javascript
-// Register a custom rule
-validator.extend('strongPassword', (value) => {
-  if (!value) return true;
-  
-  const hasUpper = /[A-Z]/.test(value);
-  const hasLower = /[a-z]/.test(value);
-  const hasNumber = /\d/.test(value);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(value);
-  
-  return hasUpper && hasLower && hasNumber && hasSpecial;
-}, 'Password must contain uppercase, lowercase, number and special characters.');
-
-// Use the custom rule
-validator.setRules('password', {
-  required: true,
-  strongPassword: true
-});
-```
-
-## Internationalization
-
-```javascript
-// Set locale
-validator.setLocale('pt-BR');
-
-// Add custom messages
-validator.addMessages('pt-BR', {
-  required: 'O campo {field} é obrigatório.',
-  email: 'O campo {field} deve ser um email válido.',
-  min: 'O campo {field} deve ter pelo menos {min} caracteres.'
-});
-```
-
-## API Reference
-
-### Validator
-
-- `setRules(field, rules)` - Set validation rules for a field
-- `validateField(field, value)` - Validate single field
-- `validateAll(data)` - Validate all fields
-- `setLocale(locale)` - Set validation locale
-- `extend(name, rule, message)` - Register custom rule
-- `errors()` - Get ErrorBag instance
-
-### ErrorBag
-
-- `get(field)` - Get field errors (reactive)
-- `first(field)` - Get first field error (reactive)
-- `has(field)` - Check if field has errors (reactive)
-- `all()` - Get all errors (reactive)
-- `clear()` - Clear all errors
-
-### Vue Composable
-
-```javascript
-import { useValidator } from '@vueller/validator/vue';
-
-const {
-  formData,           // Reactive form data
-  errors,             // Reactive errors
-  isValidating,       // Validation state
-  validateAll,        // Validate function
-  setLocale           // Change locale
-} = useValidator();
-```
+The documentation includes:
+- Complete setup guides for Vue 3 and JavaScript
+- Interactive examples and live demos
+- API reference and advanced patterns
+- Custom rules and internationalization
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**[⭐ Star on GitHub](https://github.com/vueller/validator)** • **[📦 View on NPM](https://www.npmjs.com/package/@vueller/validator)** • **[📖 Documentation](https://vueller.github.io/validator/)**
+
+</div>

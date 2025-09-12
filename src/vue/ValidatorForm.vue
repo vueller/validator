@@ -3,8 +3,8 @@
     @submit.prevent="handleSubmit" 
     :class="formClasses"
     data-validator-form
-    :data-validator-blur-disabled="!computedValidateOnBlur"
-    :data-validator-input-disabled="!computedValidateOnInput"
+    :data-validator-blur-disabled="computedValidateOnBlur === false ? 'true' : 'false'"
+    :data-validator-input-disabled="computedValidateOnInput === false ? 'true' : 'false'"
   >
     <slot 
       :errors="validator.errors()"
@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useValidator } from './composables.js';
 
 export default {
@@ -105,19 +105,19 @@ export default {
       Object.assign(formData, props.modelValue);
     }
 
-    // Watch for rule changes
-    const unwatchRules = computed(() => {
-      if (props.rules) {
-        validator.setMultipleRules(props.rules);
+    // Watch for rule changes (reactive)
+    watch(() => props.rules, (newRules) => {
+      if (newRules && Object.keys(newRules).length > 0) {
+        validator.setMultipleRules(newRules);
       }
-    });
+    }, { deep: true, immediate: false });
 
-    // Watch for model value changes
-    const unwatchModelValue = computed(() => {
-      if (props.modelValue) {
-        Object.assign(formData, props.modelValue);
+    // Watch for model value changes (reactive)
+    watch(() => props.modelValue, (newValue) => {
+      if (newValue && Object.keys(newValue).length > 0) {
+        Object.assign(formData, newValue);
       }
-    });
+    }, { deep: true, immediate: false });
 
     // Handle form submission
     const handleSubmit = async (event) => {
@@ -183,7 +183,7 @@ export default {
       }
       
       // Get global config from validator
-      const globalConfig = validator.getGlobalConfig?.() || {};
+      const globalConfig = validator.getGlobalConfig?.() || props.validatorOptions || {};
       return globalConfig.validateOnBlur !== false; // Default to true
     });
 
@@ -195,7 +195,7 @@ export default {
       }
       
       // Get global config from validator
-      const globalConfig = validator.getGlobalConfig?.() || {};
+      const globalConfig = validator.getGlobalConfig?.() || props.validatorOptions || {};
       return globalConfig.validateOnInput === true; // Default to false
     });
 
