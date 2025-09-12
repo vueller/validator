@@ -56,6 +56,12 @@ The documentation includes:
 - API reference and advanced patterns
 - Custom rules and internationalization
 
+The documentation includes:
+- Complete setup guides for Vue 3 and JavaScript
+- Interactive examples and live demos
+- API reference and advanced patterns
+- Custom rules and internationalization
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
