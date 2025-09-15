@@ -22,23 +22,11 @@ const { errors, isValid, validateField } = useValidator()
 </script>
 ```
 
-### 🌍 **Real-time i18n**
+### 🌍 **Real-time i18n Localization**
 Change languages instantly without page reloads:
 
 ```javascript
 validator.setLocale('pt-BR') // All error messages update automatically
-```
-
-### 🧙‍♂️ **Step-by-step Forms**
-Built-in support for multi-step forms and wizards:
-
-```vue
-<script setup>
-const nextStep = async () => {
-  const isValid = await stepForm.value.validateAll()
-  if (isValid) currentStep.value++
-}
-</script>
 ```
 
 ## Comparison with Other Libraries
@@ -47,8 +35,7 @@ const nextStep = async () => {
 |---------|-------------------|-------------|-----------|
 | Auto-validation | ✅ Zero config | ❌ Manual setup | ❌ Manual setup |
 | Vue 3 Composition API | ✅ Native | ✅ Supported | ✅ Supported |
-| Real-time i18n | ✅ Built-in | ❌ External plugin | ❌ External plugin |
-| Step-by-step forms | ✅ Built-in | ❌ Manual | ❌ Manual |
+| Real-time Localization | ✅ Built-in | ✅ Built-in | ❌ External plugin |
 | CSS classes | ✅ Automatic | ❌ Manual | ❌ Manual |
 | Bundle size | ✅ Small | ⚠️ Medium | ✅ Small |
 | TypeScript | ✅ Full support | ✅ Full support | ✅ Full support |
