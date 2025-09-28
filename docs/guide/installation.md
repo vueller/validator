@@ -1,248 +1,270 @@
-# Installation
+# 📦 Installation & Setup
 
-Get started with @vueller/validator in your project with these simple installation steps.
+## Installation
 
-## Package Installation
-
-Choose your preferred package manager:
-
-::: code-group
-
-```bash [npm]
+### NPM
+```bash
 npm install @vueller/validator
 ```
 
-```bash [yarn]
+### Yarn
+```bash
 yarn add @vueller/validator
 ```
 
-```bash [pnpm]
-pnpm add @vueller/validator
-```
-
-:::
-
-## CDN Usage
-
-For quick prototyping or simple projects, you can use the CDN version:
-
+### CDN
 ```html
-<!-- ES Modules -->
-<script type="module">
-  import { Validator } from 'https://unpkg.com/@vueller/validator/dist/validator.esm.js'
-  
-  const validator = new Validator()
-  // Your validation code here
-</script>
+<script src="https://unpkg.com/@vueller/validator/dist/validator.min.js"></script>
+```
 
-<!-- UMD (Global) -->
-<script src="https://unpkg.com/@vueller/validator/dist/validator.umd.js"></script>
-<script>
-  const { Validator } = VuellerValidator
-  const validator = new Validator()
+## Setup
+
+### JavaScript/TypeScript
+
+```javascript
+import { createValidator } from '@vueller/validator';
+
+// Create validator instance
+const validator = createValidator({
+  locale: 'en',
+  validateOnBlur: true,
+  validateOnInput: false
+});
+```
+
+### Vue.js Plugin
+
+```javascript
+import { createApp } from 'vue';
+import ValidatorPlugin from '@vueller/validator/vue';
+import App from './App.vue';
+
+const app = createApp(App);
+
+// Install plugin with global configuration
+app.use(ValidatorPlugin, {
+  globalValidator: true,
+  globalProperties: true,
+  locale: 'en',
+  validateOnBlur: true,
+  validateOnInput: false
+});
+
+app.mount('#app');
+```
+
+### Vue.js Composable (Recommended)
+
+```vue
+<script setup>
+import { useValidator } from '@vueller/validator/vue';
+
+const { validator, validate, errors, isValid } = useValidator({
+  locale: 'en',
+  validateOnBlur: true
+});
 </script>
 ```
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `locale` | `string` | `'en'` | Default locale for error messages |
+| `validateOnBlur` | `boolean` | `true` | Auto-validate fields on blur |
+| `validateOnInput` | `boolean` | `false` | Auto-validate fields on input |
+| `stopOnFirstFailure` | `boolean` | `false` | Stop validation on first error |
 
 ## Framework-Specific Setup
 
-### Vue 3
-
-For Vue 3 applications, install and register the plugin:
-
-```javascript
-// main.js
-import { createApp } from 'vue'
-import ValidatorPlugin from '@vueller/validator/vue'
-import App from './App.vue'
-
-const app = createApp(App)
-
-// Register the validator plugin
-app.use(ValidatorPlugin, {
-  globalValidator: true,
-  validateOnBlur: true,
-  validateOnInput: false,
-  locale: 'en'
-})
-
-app.mount('#app')
-```
-
 ### Vanilla JavaScript
 
-For plain JavaScript projects:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Validator Example</title>
+</head>
+<body>
+    <form id="myForm">
+        <input type="email" name="email" placeholder="Email">
+        <input type="password" name="password" placeholder="Password">
+        <button type="submit">Submit</button>
+    </form>
 
-```javascript
-// ES6 Modules
-import { Validator } from '@vueller/validator'
-
-const validator = new Validator({
-  locale: 'en',
-  stopOnFirstFailure: false
-})
-
-// CommonJS
-const { Validator } = require('@vueller/validator')
+    <script type="module">
+        import { createValidator } from '@vueller/validator';
+        
+        const validator = createValidator();
+        
+        // Set validation rules
+        validator.setRules('email', { required: true, email: true });
+        validator.setRules('password', { required: true, min: 8 });
+        
+        // Handle form submission
+        document.getElementById('myForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const isValid = await validator.validate(data);
+            
+            if (isValid) {
+                console.log('Form is valid!', data);
+            } else {
+                console.log('Validation errors:', validator.errors().allByField());
+            }
+        });
+    </script>
+</body>
+</html>
 ```
 
-## TypeScript Support
+### React (using Universal API)
 
-@vueller/validator includes TypeScript definitions out of the box:
+```jsx
+import React, { useState } from 'react';
+import { validator } from '@vueller/validator/universal';
 
-```typescript
-import { Validator, ValidationRules } from '@vueller/validator'
+// Set rules once
+validator.setRules('email', { required: true, email: true });
+validator.setRules('password', { required: true, min: 8 });
 
-interface UserForm {
-  email: string
-  password: string
+function LoginForm() {
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
+    const [errors, setErrors] = useState({});
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        const isValid = await validator.validate(formData);
+        
+        if (isValid) {
+            console.log('Form submitted:', formData);
+        } else {
+            setErrors(validator.getErrors());
+        }
+    };
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                />
+                {errors.email && <span className="error">{errors.email[0]}</span>}
+            </div>
+            
+            <div>
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => handleChange('password', e.target.value)}
+                />
+                {errors.password && <span className="error">{errors.password[0]}</span>}
+            </div>
+            
+            <button type="submit">Login</button>
+        </form>
+    );
 }
 
-const validator = new Validator()
-
-const rules: ValidationRules = {
-  email: { required: true, email: true },
-  password: { required: true, min: 8 }
-}
-
-const formData: UserForm = {
-  email: 'user@example.com',
-  password: 'securepass123'
-}
+export default LoginForm;
 ```
 
-## Verification
+### Vue.js with Composition API
 
-Test your installation with a simple validation:
-
-::: code-group
-
-```vue [Vue 3]
+```vue
 <template>
-  <div>
-    <input 
-      v-model="email"
-      v-rules="{ required: true, email: true }"
-      name="email"
-      placeholder="Enter email"
-    />
-    <p v-if="email">Email: {{ email }}</p>
-  </div>
+    <form @submit.prevent="handleSubmit">
+        <div>
+            <input 
+                v-model="formData.email" 
+                type="email" 
+                placeholder="Email"
+                :class="{ 'error': errors.email }"
+            />
+            <span v-if="errors.email" class="error-message">
+                {{ errors.email[0] }}
+            </span>
+        </div>
+        
+        <div>
+            <input 
+                v-model="formData.password" 
+                type="password" 
+                placeholder="Password"
+                :class="{ 'error': errors.password }"
+            />
+            <span v-if="errors.password" class="error-message">
+                {{ errors.password[0] }}
+            </span>
+        </div>
+        
+        <button type="submit" :disabled="!isValid">
+            Login
+        </button>
+    </form>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue';
+import { useValidator } from '@vueller/validator/vue';
 
-const email = ref('')
+const { validator, validate } = useValidator();
+
+// Form data
+const formData = ref({
+    email: '',
+    password: ''
+});
+
+// Set validation rules
+validator.setRules('email', { required: true, email: true });
+validator.setRules('password', { required: true, min: 8 });
+
+// Reactive errors
+const errors = computed(() => validator.errors().allByField());
+const isValid = computed(() => validator.isValid());
+
+// Handle form submission
+const handleSubmit = async () => {
+    const isFormValid = await validate(formData.value);
+    
+    if (isFormValid) {
+        console.log('Form submitted:', formData.value);
+    }
+};
 </script>
-```
 
-```javascript [Vanilla JS]
-import { Validator } from '@vueller/validator'
-
-const validator = new Validator()
-
-// Test validation
-const test = async () => {
-  const isValid = await validator.validate('test@example.com', { 
-    required: true, 
-    email: true 
-  })
-  
-  console.log('Email is valid:', isValid) // true
+<style scoped>
+.error {
+    border-color: #ef4444;
 }
 
-test()
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+</style>
 ```
-
-:::
-
-## Browser Compatibility
-
-@vueller/validator supports all modern browsers:
-
-- **Chrome** 63+
-- **Firefox** 67+
-- **Safari** 12+
-- **Edge** 79+
-
-For older browsers, consider using a polyfill for:
-- Promise
-- async/await
-- Object.assign
-
-## Bundle Size
-
-| Package | Minified | Gzipped |
-|---------|----------|---------|
-| Core | ~15KB | ~5KB |
-| Vue Plugin | ~8KB | ~3KB |
-| Total | ~23KB | ~8KB |
-
-The library is designed to be lightweight and tree-shakeable.
-
-## Troubleshooting
-
-### Common Issues
-
-**Import Errors**
-```javascript
-// ❌ Wrong
-import Validator from '@vueller/validator'
-
-// ✅ Correct
-import { Validator } from '@vueller/validator'
-```
-
-**Vue Plugin Not Working**
-```javascript
-// Make sure to import from the Vue subpackage
-import ValidatorPlugin from '@vueller/validator/vue'
-```
-
-**TypeScript Errors**
-```bash
-# Restart TypeScript server in VS Code
-# Ctrl+Shift+P → "TypeScript: Restart TS Server"
-```
-
-### Getting Help
-
-If you encounter issues:
-
-1. **Check the [FAQ](/guide/faq)** for common solutions
-2. **Search [GitHub Issues](https://github.com/vueller/validator/issues)**
-3. **Create a new issue** with a minimal reproduction
 
 ## Next Steps
 
-Now that you have @vueller/validator installed:
-
-- **[Quick Start →](./quick-start)** - Build your first validation
-- **[Vue 3 Setup →](./vue/setup)** - Configure for Vue 3
-- **[Core Usage →](./js/core)** - Use with vanilla JavaScript
-
-## Development Setup
-
-If you want to contribute or run from source:
-
-```bash
-# Clone the repository
-git clone https://github.com/vueller/validator.git
-cd validator
-
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Build the library
-npm run build
-
-# Run development server
-npm run dev
-```
-
-## License
-
-@vueller/validator is released under the MIT License. See the [LICENSE](https://github.com/vueller/validator/blob/main/LICENSE) file for details.
+- [Basic Usage](basic-usage.md) - Learn the fundamentals
+- [Validation Rules](validation-rules.md) - Explore available rules
+- [JavaScript Examples](../examples/javascript.md) - See practical examples
+- [Vue Examples](../examples/vue.md) - Vue-specific examples

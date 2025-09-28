@@ -1,15 +1,15 @@
-import { reactive, computed } from 'vue';
+import { isEmpty, isString } from '../utils/index.js';
 
 /**
  * ErrorBag class for storing and manipulating validation errors
- * Provides real-time updates and Vue 3 reactivity for seamless UI integration
+ * Framework-agnostic implementation that works with both JavaScript and Vue
+ * Provides reactive-like behavior without Vue dependency
  */
 export class ErrorBag {
   constructor() {
-    // Reactive state for errors
-    this.state = reactive({
-      errors: new Map()
-    });
+    // Internal state for errors
+    this.errors = new Map();
+    this.listeners = new Set();
   }
 
   /**
@@ -18,13 +18,16 @@ export class ErrorBag {
    * @param {string} message - The error message
    */
   add(field, message) {
-    if (!this.state.errors.has(field)) {
-      this.state.errors.set(field, []);
+    if (!isString(field) || isEmpty(message)) {
+      return; // Ignore invalid inputs
     }
-    this.state.errors.get(field).push(message);
+
+    if (!this.errors.has(field)) {
+      this.errors.set(field, []);
+    }
     
-    // Trigger reactivity by creating new Map
-    this.state.errors = new Map(this.state.errors);
+    this.errors.get(field).push(message);
+    this.notifyListeners();
   }
 
   /**
@@ -32,122 +35,64 @@ export class ErrorBag {
    * @param {string} field - The field name
    */
   remove(field) {
-    this.state.errors.delete(field);
-    
-    // Trigger reactivity by creating new Map
-    this.state.errors = new Map(this.state.errors);
+    if (!isString(field)) {
+      return; // Ignore invalid inputs
+    }
+
+    this.errors.delete(field);
+    this.notifyListeners();
   }
 
   /**
-   * Get all errors for a specific field (reactive)
-   * @param {string} field - The field name
-   * @returns {ComputedRef<string[]>} Reactive array of error messages
-   */
-  get(field) {
-    return computed(() => {
-      return this.state.errors.get(field) || [];
-    });
-  }
-
-  /**
-   * Get all errors for a specific field (non-reactive)
+   * Get all errors for a specific field
    * @param {string} field - The field name
    * @returns {string[]} Array of error messages
    */
-  getStatic(field) {
-    return this.state.errors.get(field) || [];
+  get(field) {
+    return this.errors.get(field) || [];
   }
 
   /**
-   * Get the first error for a specific field (reactive)
-   * @param {string} field - The field name
-   * @returns {ComputedRef<string|null>} Reactive first error message or null
-   */
-  first(field) {
-    return computed(() => {
-      const fieldErrors = this.state.errors.get(field) || [];
-      return fieldErrors.length > 0 ? fieldErrors[0] : null;
-    });
-  }
-
-  /**
-   * Get the first error for a specific field (non-reactive)
+   * Get the first error for a specific field
    * @param {string} field - The field name
    * @returns {string|null} First error message or null
    */
-  firstStatic(field) {
-    const fieldErrors = this.state.errors.get(field) || [];
+  first(field) {
+    const fieldErrors = this.errors.get(field) || [];
     return fieldErrors.length > 0 ? fieldErrors[0] : null;
   }
 
   /**
-   * Check if a field has any errors (reactive)
-   * @param {string} field - The field name
-   * @returns {ComputedRef<boolean>} Reactive boolean indicating if field has errors
-   */
-  has(field) {
-    return computed(() => {
-      return this.state.errors.has(field) && this.state.errors.get(field).length > 0;
-    });
-  }
-
-  /**
-   * Check if a field has any errors (non-reactive)
+   * Check if a field has any errors
    * @param {string} field - The field name
    * @returns {boolean} True if field has errors
    */
-  hasStatic(field) {
-    return this.state.errors.has(field) && this.state.errors.get(field).length > 0;
+  has(field) {
+    return this.errors.has(field) && this.errors.get(field).length > 0;
   }
 
   /**
-   * Get all errors as a flat array (reactive)
-   * @returns {ComputedRef<string[]>} Reactive array of all error messages
-   */
-  all() {
-    return computed(() => {
-      const allErrors = [];
-      for (const fieldErrors of this.state.errors.values()) {
-        allErrors.push(...fieldErrors);
-      }
-      return allErrors;
-    });
-  }
-
-  /**
-   * Get all errors as a flat array (non-reactive)
+   * Get all errors as a flat array
    * @returns {string[]} Array of all error messages
    */
-  allStatic() {
+  all() {
     const allErrors = [];
-    for (const fieldErrors of this.state.errors.values()) {
+    for (const fieldErrors of this.errors.values()) {
       allErrors.push(...fieldErrors);
     }
     return allErrors;
   }
 
   /**
-   * Get all errors grouped by field (reactive)
-   * @returns {ComputedRef<Object>} Reactive object with field names as keys and error arrays as values
-   */
-  allByField() {
-    return computed(() => {
-      const result = {};
-      for (const [field, fieldErrors] of this.state.errors.entries()) {
-        result[field] = [...fieldErrors];
-      }
-      return result;
-    });
-  }
-
-  /**
-   * Get all errors grouped by field (non-reactive)
+   * Get all errors grouped by field
    * @returns {Object} Object with field names as keys and error arrays as values
    */
-  allByFieldStatic() {
+  allByField() {
     const result = {};
-    for (const [field, fieldErrors] of this.state.errors.entries()) {
-      result[field] = [...fieldErrors];
+    for (const [field, fieldErrors] of this.errors.entries()) {
+      if (fieldErrors.length > 0) {
+        result[field] = [...fieldErrors];
+      }
     }
     return result;
   }
@@ -156,94 +101,117 @@ export class ErrorBag {
    * Clear all errors
    */
   clear() {
-    this.state.errors.clear();
-    
-    // Trigger reactivity by creating new Map
-    this.state.errors = new Map(this.state.errors);
+    this.errors.clear();
+    this.notifyListeners();
   }
 
   /**
-   * Check if there are any errors (reactive)
-   * @returns {ComputedRef<boolean>} Reactive boolean indicating if there are any errors
-   */
-  any() {
-    return computed(() => {
-      return this.state.errors.size > 0;
-    });
-  }
-
-  /**
-   * Check if there are any errors (non-reactive)
+   * Check if there are any errors
    * @returns {boolean} True if there are any errors
    */
-  anyStatic() {
-    return this.state.errors.size > 0;
+  any() {
+    return this.errors.size > 0;
   }
 
   /**
-   * Get the total count of errors (reactive)
-   * @returns {ComputedRef<number>} Reactive total number of errors
-   */
-  count() {
-    return computed(() => {
-      let total = 0;
-      for (const fieldErrors of this.state.errors.values()) {
-        total += fieldErrors.length;
-      }
-      return total;
-    });
-  }
-
-  /**
-   * Get the total count of errors (non-reactive)
+   * Get the total count of errors
    * @returns {number} Total number of errors
    */
-  countStatic() {
+  count() {
     let total = 0;
-    for (const fieldErrors of this.state.errors.values()) {
+    for (const fieldErrors of this.errors.values()) {
       total += fieldErrors.length;
     }
     return total;
   }
 
   /**
-   * Get all field names that have errors (reactive)
-   * @returns {ComputedRef<string[]>} Reactive array of field names
-   */
-  keys() {
-    return computed(() => {
-      return Array.from(this.state.errors.keys());
-    });
-  }
-
-  /**
-   * Get all field names that have errors (non-reactive)
+   * Get all field names that have errors
    * @returns {string[]} Array of field names
    */
-  keysStatic() {
-    return Array.from(this.state.errors.keys());
+  keys() {
+    return Array.from(this.errors.keys()).filter(field => 
+      this.errors.get(field).length > 0
+    );
   }
 
   /**
-   * Get reactive state for Vue components
+   * Subscribe to changes (for reactive frameworks)
+   * @param {Function} listener - Callback function
+   * @returns {Function} Unsubscribe function
+   */
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  /**
+   * Notify all listeners of changes
+   * @private
+   */
+  notifyListeners() {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+
+  /**
+   * Get state for Vue components (creates reactive wrappers)
    * @returns {Object} Object with reactive computed properties
    */
-  getReactiveState() {
+  getState() {
+    // Check if Vue is available
+    if (typeof window !== 'undefined' && window.Vue) {
+      const { computed } = window.Vue;
+      return this.createVueState(computed);
+    }
+
+    // Try to import Vue dynamically
+    try {
+      const { computed } = require('vue');
+      return this.createVueState(computed);
+    } catch {
+      // Fallback to plain object for non-Vue environments
+      return this.createPlainState();
+    }
+  }
+
+  /**
+   * Create Vue reactive state
+   * @param {Function} computed - Vue computed function
+   * @returns {Object} Vue reactive state
+   */
+  createVueState(computed) {
+    return {
+      errors: computed(() => this.allByField()),
+      
+      // Direct methods - will be reactive through computed
+      has: this.has.bind(this),
+      first: this.first.bind(this),
+      get: this.get.bind(this),
+      any: computed(() => this.any()),
+      count: computed(() => this.count()),
+      keys: computed(() => this.keys()),
+      clear: this.clear.bind(this)
+    };
+  }
+
+  /**
+   * Create plain JavaScript state
+   * @returns {Object} Plain state object
+   */
+  createPlainState() {
     return {
       errors: this.allByField(),
-      hasErrors: this.any(),
-      errorCount: this.count(),
-      errorKeys: this.keys(),
       
-      // Helper methods
-      hasError: (field) => this.has(field),
-      getError: (field) => this.first(field),
-      getErrors: (field) => this.get(field),
-      
-      // Non-reactive methods for performance when reactivity is not needed
-      hasErrorStatic: (field) => this.hasStatic(field),
-      getErrorStatic: (field) => this.firstStatic(field),
-      getErrorsStatic: (field) => this.getStatic(field)
+      // Direct methods
+      has: this.has.bind(this),
+      first: this.first.bind(this),
+      get: this.get.bind(this),
+      any: this.any.bind(this),
+      count: this.count.bind(this),
+      keys: this.keys.bind(this),
+      clear: this.clear.bind(this)
     };
   }
 }

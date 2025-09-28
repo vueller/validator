@@ -17,7 +17,7 @@ export function useValidator(options = {}) {
   const validator = new Validator(options);
   
   // Get all reactive state from validator
-  const reactiveState = validator.getReactiveState();
+  const reactiveState = validator.getState();
 
   // Provide validator instance for child components
   provide(ValidatorSymbol, validator);

@@ -3,72 +3,67 @@
     @submit.prevent="handleSubmit" 
     :class="formClasses"
     data-validator-form
-    :data-validator-blur-disabled="computedValidateOnBlur === false ? 'true' : 'false'"
-    :data-validator-input-disabled="computedValidateOnInput === false ? 'true' : 'false'"
+    :data-validator-blur-disabled="!validateOnBlur"
+    :data-validator-input-disabled="!validateOnInput"
   >
     <slot 
-      :errors="validator.errors()"
-      :errorData="errors"
+      :validator="validator"
+      :errors="errors"
       :isValidating="isValidating"
       :isValid="isValid"
       :hasErrors="hasErrors"
-      :validateField="validateField"
+      :validate="validate"
       :reset="reset"
+      :formData="formData"
     />
   </form>
 </template>
 
 <script>
-import { computed, watch } from 'vue';
+import { computed, watch, reactive } from 'vue';
 import { useValidator } from './composables.js';
 
 export default {
   name: 'ValidatorForm',
+  
   props: {
-    /**
-     * Validation rules for form fields
-     * Format: { fieldName: rules }
-     */
+    /** Validation rules for form fields */
     rules: {
       type: Object,
       default: () => ({})
     },
 
-    /**
-     * Initial form data
-     */
+    /** Initial form data */
     modelValue: {
       type: Object,
       default: () => ({})
     },
 
-    /**
-     * Validator options
-     */
+    /** Form scope identifier */
+    scope: {
+      type: String,
+      default: 'default'
+    },
+
+    /** Validator options */
     validatorOptions: {
       type: Object,
       default: () => ({})
     },
 
-    /**
-     * Whether to validate fields on blur (overrides global setting)
-     */
+    /** Whether to validate fields on blur */
     validateOnBlur: {
       type: Boolean,
-      default: null // null means use global setting
+      default: true
     },
 
-    /**
-     * Whether to validate fields on input (overrides global setting)
-     */
+    /** Whether to validate fields on input */
     validateOnInput: {
       type: Boolean,
-      default: null // null means use global setting
+      default: false
     },
 
-    /**
-     * CSS classes for the form
-     */
+    /** CSS classes for the form */
     formClass: {
       type: [String, Object, Array],
       default: ''
@@ -85,74 +80,76 @@ export default {
   setup(props, { emit }) {
     const {
       validator,
-      formData,
       errors,
       isValidating,
       isValid,
       hasErrors,
-      validateField,
-      validateAll,
+      validate,
       reset: resetValidator
     } = useValidator(props.validatorOptions);
 
-    // Set initial rules
-    if (props.rules) {
-      validator.setMultipleRules(props.rules);
-    }
+    // Form data (reactive)
+    const formData = reactive({ ...props.modelValue });
 
-    // Set initial data
-    if (props.modelValue) {
-      Object.assign(formData, props.modelValue);
-    }
+    // Initialize validator
+    const initializeValidator = () => {
+      // Set rules for this scope
+      if (props.rules && Object.keys(props.rules).length > 0) {
+        validator.setMultipleRules(props.rules, {}, props.scope);
+      }
 
-    // Watch for rule changes (reactive)
+      // Set initial data for scope
+      validator.setData(formData, props.scope);
+    };
+
+    // Initialize on setup
+    initializeValidator();
+
+    // Watch for rule changes
     watch(() => props.rules, (newRules) => {
       if (newRules && Object.keys(newRules).length > 0) {
-        validator.setMultipleRules(newRules);
+        validator.setMultipleRules(newRules, {}, props.scope);
       }
-    }, { deep: true, immediate: false });
+    }, { deep: true });
 
-    // Watch for model value changes (reactive)
+    // Watch for model value changes
     watch(() => props.modelValue, (newValue) => {
-      if (newValue && Object.keys(newValue).length > 0) {
+      if (newValue) {
         Object.assign(formData, newValue);
+        validator.setData(formData, props.scope);
       }
-    }, { deep: true, immediate: false });
+    }, { deep: true });
+
+    // Watch form data changes and emit updates
+    watch(formData, (newData) => {
+      emit('update:modelValue', newData);
+    }, { deep: true });
 
     // Handle form submission
     const handleSubmit = async (event) => {
-      emit('update:modelValue', formData);
+      // Validate with current form data (setData handled automatically)
+      const isFormValid = await validator.validate(props.scope, formData);
       
-      const isFormValid = await validateAll();
-      
+      const submitData = {
+        data: formData,
+        isValid: isFormValid,
+        errors: errors.value,
+        event
+      };
+
       if (isFormValid) {
         emit('validation-success', formData);
-        emit('submit', {
-          data: formData,
-          isValid: true,
-          errors: errors.value,
-          event
-        });
       } else {
-        emit('validation-error', {
-          data: formData,
-          errors: errors.value
-        });
-        emit('submit', {
-          data: formData,
-          isValid: false,
-          errors: errors.value,
-          event
-        });
+        emit('validation-error', { data: formData, errors: errors.value });
       }
+      
+      emit('submit', submitData);
     };
 
     // Reset form
     const reset = () => {
       resetValidator();
-      Object.keys(formData).forEach(key => {
-        delete formData[key];
-      });
+      Object.keys(formData).forEach(key => delete formData[key]);
       emit('update:modelValue', {});
     };
 
@@ -160,61 +157,12 @@ export default {
     const formClasses = computed(() => {
       const classes = [props.formClass];
       
-      if (hasErrors.value) {
-        classes.push('has-errors');
-      }
+      if (hasErrors.value) classes.push('has-errors');
+      if (isValid.value && Object.keys(formData).length > 0) classes.push('is-valid');
+      if (isValidating.value) classes.push('is-validating');
       
-      if (isValid.value && Object.keys(formData).length > 0) {
-        classes.push('is-valid');
-      }
-      
-      if (isValidating.value) {
-        classes.push('is-validating');
-      }
-      
-      return classes;
+      return classes.filter(Boolean);
     });
-
-    // Computed validateOnBlur - considers both global config and form prop
-    const computedValidateOnBlur = computed(() => {
-      // Form prop takes priority over global config
-      if (props.validateOnBlur !== null) {
-        return props.validateOnBlur;
-      }
-      
-      // Get global config from validator
-      const globalConfig = validator.getGlobalConfig?.() || props.validatorOptions || {};
-      return globalConfig.validateOnBlur !== false; // Default to true
-    });
-
-    // Computed validateOnInput - considers both global config and form prop  
-    const computedValidateOnInput = computed(() => {
-      // Form prop takes priority over global config
-      if (props.validateOnInput !== null) {
-        return props.validateOnInput;
-      }
-      
-      // Get global config from validator
-      const globalConfig = validator.getGlobalConfig?.() || props.validatorOptions || {};
-      return globalConfig.validateOnInput === true; // Default to false
-    });
-
-    // Setup field validation events if enabled
-    if (props.validateOnBlur || props.validateOnInput) {
-      // This would be implemented with event delegation
-      // For now, we'll leave this as a placeholder for future enhancement
-    }
-
-    // Expose methods for external access (like in step-by-step components)
-    const expose = {
-      validator,
-      validateAll: () => validateAll(formData),
-      reset,
-      isValid,
-      hasErrors,
-      errors,
-      formData
-    }
 
     return {
       validator,
@@ -223,15 +171,10 @@ export default {
       isValidating,
       isValid,
       hasErrors,
-      validateField,
+      validate: (data = formData) => validator.validate(props.scope, data),
       handleSubmit,
       reset,
-      formClasses,
-      computedValidateOnBlur,
-      computedValidateOnInput,
-      
-      // For template ref access
-      ...expose
+      formClasses
     };
   }
 };
@@ -239,13 +182,13 @@ export default {
 
 <style scoped>
 .is-validating {
-  /* Add visual indication for forms being validated */
   pointer-events: none;
   opacity: 0.7;
 }
 
-/* Additional classes can be added here for:
-   .has-errors - visual indication for forms with errors
-   .is-valid - visual indication for valid forms
+/* 
+  Additional CSS classes available:
+  .has-errors - for forms with validation errors
+  .is-valid - for forms that are valid
 */
 </style>

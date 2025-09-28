@@ -7,14 +7,16 @@ import {
   PatternRule, 
   ConfirmedRule 
 } from './rules/index.js';
+import { isObject, isArray, isString, isNumber } from './utils/index.js';
 
 /**
  * RuleRegistry class for managing validation rules
  * Provides a centralized way to register, create, and manage validation rules
+ * Refactored to use utilities and follow clean code principles
  */
 export class RuleRegistry {
   constructor() {
-    this.rules = new Map();
+    this.builtInRules = new Map();
     this.customRules = new Map();
     
     // Register built-in rules
@@ -25,13 +27,19 @@ export class RuleRegistry {
    * Register all built-in validation rules
    */
   registerBuiltInRules() {
-    this.rules.set('required', RequiredRule);
-    this.rules.set('min', MinRule);
-    this.rules.set('max', MaxRule);
-    this.rules.set('email', EmailRule);
-    this.rules.set('numeric', NumericRule);
-    this.rules.set('pattern', PatternRule);
-    this.rules.set('confirmed', ConfirmedRule);
+    const rules = {
+      required: RequiredRule,
+      min: MinRule,
+      max: MaxRule,
+      email: EmailRule,
+      numeric: NumericRule,
+      pattern: PatternRule,
+      confirmed: ConfirmedRule
+    };
+
+    for (const [name, RuleClass] of Object.entries(rules)) {
+      this.builtInRules.set(name, RuleClass);
+    }
   }
 
   /**
@@ -41,58 +49,66 @@ export class RuleRegistry {
    * @param {string} message - Optional default message
    */
   register(name, rule, message = null) {
-    if (typeof rule === 'function' && (!rule.prototype || !rule.prototype.validate)) {
-      // If it's a plain function, wrap it in a rule class
+    if (this.isValidationFunction(rule)) {
+      // Wrap function in rule-like object
       this.customRules.set(name, {
         validate: rule,
-        message: message || `The {field} field is invalid.`
+        message: message || `The {field} field is invalid.`,
+        getRuleName: () => name
       });
     } else {
       // It's a rule class
-      this.rules.set(name, rule);
+      this.builtInRules.set(name, rule);
     }
+  }
+
+  /**
+   * Check if rule is a plain validation function
+   * @param {any} rule - Rule to check
+   * @returns {boolean} True if it's a validation function
+   */
+  isValidationFunction(rule) {
+    return typeof rule === 'function' && (!rule.prototype || !rule.prototype.validate);
   }
 
   /**
    * Create a rule instance from a rule definition
    * @param {string} name - The rule name
    * @param {any} params - Parameters for the rule
-   * @returns {Object|null} Rule instance, custom rule object, or null if rule is unknown
+   * @returns {Object|null} Rule instance or null if rule is unknown
    */
   create(name, params = null) {
-    // Check if it's a built-in rule
-    if (this.rules.has(name)) {
-      const RuleClass = this.rules.get(name);
-      
-      // Handle different parameter formats
-      if (params !== null && params !== undefined) {
-        if (name === 'min' || name === 'max') {
-          return new RuleClass(params);
-        } else if (name === 'confirmed') {
-          return new RuleClass(params);
-        } else if (name === 'pattern') {
-          return new RuleClass(params);
-        } else {
-          return new RuleClass(params);
-        }
-      } else {
-        return new RuleClass();
-      }
+    // Check built-in rules first
+    if (this.builtInRules.has(name)) {
+      const RuleClass = this.builtInRules.get(name);
+      return this.createBuiltInRule(RuleClass, params);
     }
 
-    // Check if it's a custom rule
+    // Check custom rules
     if (this.customRules.has(name)) {
       const customRule = this.customRules.get(name);
       return {
-        validate: customRule.validate,
-        getMessage: () => customRule.message,
+        ...customRule,
         params: params
       };
     }
 
-    // Instead of throwing an error, log a warning and return null
+    // Log warning for unknown rules instead of throwing error
     console.warn(`Unknown validation rule: ${name}. This rule will be ignored.`);
     return null;
+  }
+
+  /**
+   * Create built-in rule instance with proper parameter handling
+   * @param {Function} RuleClass - Rule class constructor
+   * @param {any} params - Rule parameters
+   * @returns {Object} Rule instance
+   */
+  createBuiltInRule(RuleClass, params) {
+    if (params !== null && params !== undefined) {
+      return new RuleClass(params);
+    }
+    return new RuleClass();
   }
 
   /**
@@ -103,52 +119,84 @@ export class RuleRegistry {
   parseRules(rules) {
     if (!rules) return [];
 
-    // Handle object format: { required: true, min: 5, max: 15 }
-    if (typeof rules === 'object' && !Array.isArray(rules)) {
-      const ruleInstances = [];
-      
-      for (const [ruleName, ruleValue] of Object.entries(rules)) {
-        if (ruleValue === false) continue; // Skip disabled rules
-        
-        let ruleInstance;
-        if (ruleValue === true) {
-          ruleInstance = this.create(ruleName);
-        } else {
-          ruleInstance = this.create(ruleName, ruleValue);
-        }
-        
-        // Only add valid rule instances (filter out null values from unknown rules)
-        if (ruleInstance !== null) {
-          ruleInstances.push(ruleInstance);
-        }
-      }
-      
-      return ruleInstances;
+    if (isObject(rules)) {
+      return this.parseObjectRules(rules);
     }
 
-    // Handle array format: ['required', 'min:5', 'max:15']
-    if (Array.isArray(rules)) {
-      return rules.map(rule => {
-        let ruleInstance;
-        if (typeof rule === 'string') {
-          ruleInstance = this.parseStringRule(rule);
-        } else if (typeof rule === 'object') {
-          // Handle rule objects in array
-          const [ruleName, ruleParams] = Object.entries(rule)[0];
-          ruleInstance = this.create(ruleName, ruleParams);
-        } else {
-          ruleInstance = rule; // Assume it's already a rule instance
-        }
-        return ruleInstance;
-      }).filter(rule => rule !== null); // Filter out null values from unknown rules
+    if (isArray(rules)) {
+      return this.parseArrayRules(rules);
     }
 
-    // Handle string format: 'required|min:5|max:15'
-    if (typeof rules === 'string') {
-      return rules.split('|').map(rule => this.parseStringRule(rule)).filter(rule => rule !== null);
+    if (isString(rules)) {
+      return this.parseStringRules(rules);
     }
 
     return [];
+  }
+
+  /**
+   * Parse object format rules: { required: true, min: 5, max: 15 }
+   * @param {Object} rules - Rules object
+   * @returns {Array} Array of rule instances
+   */
+  parseObjectRules(rules) {
+    const ruleInstances = [];
+    
+    for (const [ruleName, ruleValue] of Object.entries(rules)) {
+      if (ruleValue === false) continue; // Skip disabled rules
+      
+      const ruleInstance = ruleValue === true 
+        ? this.create(ruleName)
+        : this.create(ruleName, ruleValue);
+      
+      if (ruleInstance !== null) {
+        ruleInstances.push(ruleInstance);
+      }
+    }
+    
+    return ruleInstances;
+  }
+
+  /**
+   * Parse array format rules: ['required', 'min:5', 'max:15']
+   * @param {Array} rules - Rules array
+   * @returns {Array} Array of rule instances
+   */
+  parseArrayRules(rules) {
+    return rules
+      .map(rule => this.parseArrayRule(rule))
+      .filter(rule => rule !== null);
+  }
+
+  /**
+   * Parse single array rule
+   * @param {string|Object} rule - Single rule
+   * @returns {Object|null} Rule instance or null
+   */
+  parseArrayRule(rule) {
+    if (isString(rule)) {
+      return this.parseStringRule(rule);
+    }
+    
+    if (isObject(rule)) {
+      const [ruleName, ruleParams] = Object.entries(rule)[0];
+      return this.create(ruleName, ruleParams);
+    }
+    
+    // Assume it's already a rule instance
+    return rule;
+  }
+
+  /**
+   * Parse string format rules: 'required|min:5|max:15'
+   * @param {string} rules - Rules string
+   * @returns {Array} Array of rule instances
+   */
+  parseStringRules(rules) {
+    return rules
+      .split('|')
+      .map(rule => this.parseStringRule(rule))
+      .filter(rule => rule !== null);
   }
 
   /**
@@ -161,14 +209,24 @@ export class RuleRegistry {
     
     if (params.length === 0) {
       return this.create(ruleName);
-    } else if (params.length === 1) {
-      // Try to parse as number if possible
-      const param = isNaN(params[0]) ? params[0] : Number(params[0]);
-      return this.create(ruleName, param);
-    } else {
-      // Multiple parameters
-      return this.create(ruleName, params);
     }
+    
+    if (params.length === 1) {
+      const param = this.parseParameter(params[0]);
+      return this.create(ruleName, param);
+    }
+    
+    // Multiple parameters
+    return this.create(ruleName, params);
+  }
+
+  /**
+   * Parse parameter value (convert to number if possible)
+   * @param {string} param - Parameter string
+   * @returns {string|number} Parsed parameter
+   */
+  parseParameter(param) {
+    return isNaN(param) ? param : Number(param);
   }
 
   /**
@@ -177,7 +235,7 @@ export class RuleRegistry {
    * @returns {boolean} True if rule exists
    */
   has(name) {
-    return this.rules.has(name) || this.customRules.has(name);
+    return this.builtInRules.has(name) || this.customRules.has(name);
   }
 
   /**
@@ -186,7 +244,7 @@ export class RuleRegistry {
    */
   getRuleNames() {
     return [
-      ...Array.from(this.rules.keys()),
+      ...Array.from(this.builtInRules.keys()),
       ...Array.from(this.customRules.keys())
     ];
   }
@@ -196,12 +254,12 @@ export class RuleRegistry {
    * @param {string} name - The rule name
    */
   remove(name) {
-    this.rules.delete(name);
+    this.builtInRules.delete(name);
     this.customRules.delete(name);
   }
 
   /**
-   * Clear all rules except built-in ones
+   * Clear all custom rules
    */
   clearCustomRules() {
     this.customRules.clear();
@@ -211,7 +269,15 @@ export class RuleRegistry {
    * Clear all rules including built-in ones
    */
   clear() {
-    this.rules.clear();
+    this.builtInRules.clear();
     this.customRules.clear();
+  }
+
+  /**
+   * Get rule count
+   * @returns {number} Total number of registered rules
+   */
+  count() {
+    return this.builtInRules.size + this.customRules.size;
   }
 }

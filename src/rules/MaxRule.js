@@ -1,7 +1,9 @@
 import { Rule } from './Rule.js';
+import { validateMax } from '../utils/index.js';
 
 /**
- * Max length rule - checks maximum string length or number value
+ * Max rule - checks maximum string length or number value
+ * Uses centralized validation logic for consistency
  */
 export class MaxRule extends Rule {
   constructor(maxValue) {
@@ -9,22 +11,6 @@ export class MaxRule extends Rule {
   }
 
   validate(value, field, allValues) {
-    if (value === null || value === undefined) {
-      return true; // Let required rule handle empty values
-    }
-
-    if (typeof value === 'string') {
-      return value.length <= this.params.max;
-    }
-
-    if (typeof value === 'number') {
-      return value <= this.params.max;
-    }
-
-    if (Array.isArray(value)) {
-      return value.length <= this.params.max;
-    }
-
-    return false;
+    return validateMax(value, this.params.max);
   }
 }

@@ -1,75 +1,202 @@
-# @vueller/validator
+# 🚀 Universal Validator
 
-> Modern universal validation library with Vue 3, JavaScript support, and upcoming React & Angular integrations.
+A modern, framework-agnostic validation library with reactive support for JavaScript and Vue.js applications.
 
-[![npm version](https://img.shields.io/npm/v/@vueller/validator.svg)](https://www.npmjs.com/package/@vueller/validator)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Vue 3](https://img.shields.io/badge/Vue-3.x-brightgreen.svg)](https://vuejs.org/)
+## ✨ Features
 
-## What is it?
+- 🌐 **Universal**: Works with vanilla JavaScript, Vue.js, and any framework
+- ⚡ **Reactive**: Real-time validation with automatic UI updates
+- 🎯 **Scope-based**: Multiple forms in the same page with isolated validation
+- 🧩 **Modular**: Clean architecture with extensible rules system
+- 🌍 **i18n Ready**: Built-in internationalization support
+- 📱 **TypeScript**: Full TypeScript support (coming soon)
+- 🎨 **Framework Agnostic**: No dependencies on specific frameworks
 
-A clean, modular validation library that provides:
+## 🚀 Quick Start
 
-- **Universal Support** - Works with Vue 3, Vanilla JS, and coming soon: React & Angular
-- **Auto-validation** - Zero configuration validation with visual feedback
-- **Real-time i18n** - Instant language switching for error messages
-- **Custom Rules** - Easy to extend with your own validation logic
-- **TypeScript Ready** - Full type support out of the box
-
-## Quick Example
-
-### Vue 3
-```vue
-<template>
-  <input 
-    v-model="email" 
-    v-rules="{ required: true, email: true }" 
-    name="email" 
-  />
-</template>
-```
-
-### JavaScript
-```javascript
-import { Validator } from '@vueller/validator'
-
-const validator = new Validator()
-const isValid = await validator.validate('user@example.com', { 
-  required: true, 
-  email: true 
-})
-```
-
-## Installation
+### Installation
 
 ```bash
 npm install @vueller/validator
 ```
 
-## Documentation
+### JavaScript Example
 
-**[📖 Full Documentation →](https://vueller.github.io/validator/)**
+```javascript
+import { createValidator } from '@vueller/validator';
 
-The documentation includes:
-- Complete setup guides for Vue 3 and JavaScript
-- Interactive examples and live demos
-- API reference and advanced patterns
-- Custom rules and internationalization
+// Create validator and set rules
+const validator = createValidator();
+validator.setRules('email', { required: true, email: true });
+validator.setRules('password', { required: true, min: 8 });
 
-The documentation includes:
-- Complete setup guides for Vue 3 and JavaScript
-- Interactive examples and live demos
-- API reference and advanced patterns
-- Custom rules and internationalization
+// Validate with data
+const formData = {
+  email: 'user@example.com',
+  password: 'mypassword123'
+};
 
-## License
+const isValid = await validator.validate(formData);
+console.log('Form is valid:', isValid);
+
+// Validate specific field
+const isEmailValid = await validator.validate().field('email', 'user@example.com');
+console.log('Email is valid:', isEmailValid);
+```
+
+### Vue.js Example
+
+```vue
+<template>
+  <ValidatorForm v-model="formData" :rules="rules" @submit="handleSubmit">
+    <div>
+      <ValidatorField field="email" v-model="formData.email">
+        <input v-model="formData.email" type="email" placeholder="Email" />
+      </ValidatorField>
+    </div>
+    
+    <div>
+      <ValidatorField field="password" v-model="formData.password">
+        <input v-model="formData.password" type="password" placeholder="Password" />
+      </ValidatorField>
+    </div>
+    
+    <button type="submit">Submit</button>
+  </ValidatorForm>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { ValidatorForm, ValidatorField } from '@vueller/validator/vue';
+
+const formData = ref({
+  email: '',
+  password: ''
+});
+
+const rules = {
+  email: { required: true, email: true },
+  password: { required: true, min: 8 }
+};
+
+const handleSubmit = ({ data, isValid }) => {
+  if (isValid) {
+    console.log('Form submitted:', data);
+  }
+};
+</script>
+```
+
+## 📚 Documentation
+
+### Getting Started
+- [Installation & Setup](docs/guide/installation.md)
+- [Basic Usage](docs/guide/basic-usage.md)
+- [Validation Rules](docs/guide/validation-rules.md)
+
+### Examples
+- [JavaScript Examples](docs/examples/javascript.md)
+- [Vue.js Examples](docs/examples/vue.md)
+
+### Advanced
+- [Advanced Guide](docs/guide/advanced.md)
+
+### API Reference
+- [Core API](docs/api/core.md)
+- [Vue Components](docs/api/vue.md)
+- [Universal API](docs/api/universal.md)
+
+## 🎯 Key Concepts
+
+### Scope-based Validation
+Handle multiple forms in the same page with isolated validation:
+
+```javascript
+// Login form
+await validator.validate('loginForm', loginData);
+
+// Register form  
+await validator.validate('registerForm', registerData);
+```
+
+### Fluent API
+Chain validation calls for better readability:
+
+```javascript
+// Validate all fields
+await validator.validate(formData);
+
+// Validate specific field
+await validator.validate('loginForm').field('email', 'user@test.com');
+```
+
+### Framework Agnostic
+Same API works everywhere:
+
+```javascript
+// Vanilla JavaScript
+import { createValidator } from '@vueller/validator';
+
+// Vue.js
+import { ValidatorForm } from '@vueller/validator/vue';
+
+// Universal API
+import { validator } from '@vueller/validator/universal';
+```
+
+## 🛠️ Built-in Validation Rules
+
+- `required` - Field is required
+- `email` - Valid email format
+- `min` - Minimum length/value
+- `max` - Maximum length/value
+- `numeric` - Numeric values only
+- `pattern` - Custom regex pattern
+- `confirmed` - Field confirmation (passwords)
+
+## 🌍 Internationalization
+
+```javascript
+validator.setLocale('pt-BR');
+validator.addMessages('pt-BR', {
+  required: 'O campo {field} é obrigatório',
+  email: 'O campo {field} deve ser um email válido'
+});
+```
+
+## 🔧 Custom Rules
+
+```javascript
+validator.extend('evenNumber', (value) => {
+  return Number(value) % 2 === 0;
+}, 'The {field} must be an even number');
+```
+
+## 📦 What's Included
+
+```
+@vueller/validator/
+├── core          # Core validation engine
+├── vue           # Vue.js components and composables  
+├── universal     # Universal API for any framework
+└── locales       # Internationalization files
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
+## 🔗 Links
+
+- [Documentation](docs/)
+- [Examples](docs/examples/)
+- [API Reference](docs/api/)
+- [Changelog](CHANGELOG.md)
+
 ---
 
-<div align="center">
-
-**[⭐ Star on GitHub](https://github.com/vueller/validator)** • **[📦 View on NPM](https://www.npmjs.com/package/@vueller/validator)** • **[📖 Documentation](https://vueller.github.io/validator/)**
-
-</div>
+Made with ❤️ by the Vueller team

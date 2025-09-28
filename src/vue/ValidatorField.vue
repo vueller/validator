@@ -24,52 +24,47 @@ import { ValidatorSymbol } from './composables.js';
 
 export default {
   name: 'ValidatorField',
+  
   props: {
-    /**
-     * Field name for validation
-     */
+    /** Field name for validation */
     field: {
       type: String,
       required: true
     },
 
-    /**
-     * Validation rules for this field
-     */
+    /** Validation rules for this field */
     rules: {
       type: [String, Object, Array],
       default: null
     },
 
-    /**
-     * Whether to show validation errors
-     */
+    /** Form scope identifier */
+    scope: {
+      type: String,
+      default: 'default'
+    },
+
+    /** Field value for validation */
+    modelValue: {
+      default: null
+    },
+
+    /** Whether to show validation errors */
     showErrors: {
       type: Boolean,
       default: true
     },
 
-    /**
-     * CSS classes for the field wrapper
-     */
+    /** CSS classes for the field wrapper */
     fieldClass: {
       type: [String, Object, Array],
       default: ''
     },
 
-    /**
-     * CSS classes for error messages
-     */
+    /** CSS classes for error messages */
     errorClass: {
       type: [String, Object, Array],
-      default: 'text-red-500 text-sm mt-1'
-    },
-
-    /**
-     * Field value for validation
-     */
-    modelValue: {
-      default: null
+      default: 'field-errors'
     }
   },
 
@@ -83,24 +78,29 @@ export default {
       return {};
     }
 
-    // Set rules for the field
+    // Set rules for the field in this scope
     if (props.rules) {
-      validator.setRules(props.field, props.rules);
+      validator.setRules(props.field, props.rules, {}, props.scope);
     }
 
-    // Get field errors
+    // Get scoped field name for error tracking
+    const scopedFieldName = computed(() => {
+      return props.scope === 'default' ? props.field : `${props.scope}.${props.field}`;
+    });
+
+    // Get field errors (scoped)
     const fieldErrors = computed(() => {
-      return validator.errors().get(props.field);
+      return validator.errors().get(scopedFieldName.value);
     });
 
-    // Check if field has errors
+    // Check if field has errors (scoped)
     const hasFieldError = computed(() => {
-      return validator.errors().has(props.field);
+      return validator.errors().has(scopedFieldName.value);
     });
 
-    // Get first error
+    // Get first error (scoped)
     const firstError = computed(() => {
-      return validator.errors().first(props.field);
+      return validator.errors().first(scopedFieldName.value);
     });
 
     // Check if field is valid
@@ -111,20 +111,23 @@ export default {
     // Validate this field
     const validate = async (value = null) => {
       const fieldValue = value !== null ? value : props.modelValue;
-      const isValid = await validator.validateField(props.field, fieldValue, validator.getData());
       
+      // Validate using new API (field value set automatically)
+      const isValid = await validator.validate(props.scope).field(props.field, fieldValue);
+      
+      const eventData = {
+        field: props.field,
+        value: fieldValue,
+        isValid,
+        scope: props.scope
+      };
+
       if (isValid) {
-        emit('field-validated', {
-          field: props.field,
-          value: fieldValue,
-          isValid: true
-        });
+        emit('field-validated', eventData);
       } else {
         emit('field-error', {
-          field: props.field,
-          value: fieldValue,
-          errors: fieldErrors.value,
-          isValid: false
+          ...eventData,
+          errors: fieldErrors.value
         });
       }
       
@@ -135,20 +138,15 @@ export default {
     const fieldClasses = computed(() => {
       const classes = [props.fieldClass];
       
-      if (hasFieldError.value) {
-        classes.push('has-error');
-      }
+      if (hasFieldError.value) classes.push('has-error');
+      if (isFieldValid.value && props.modelValue != null) classes.push('is-valid');
       
-      if (isFieldValid.value && props.modelValue !== null && props.modelValue !== undefined) {
-        classes.push('is-valid');
-      }
-      
-      return classes;
+      return classes.filter(Boolean);
     });
 
     // Computed error classes
     const errorClasses = computed(() => {
-      return [props.errorClass];
+      return [props.errorClass].filter(Boolean);
     });
 
     return {
@@ -173,7 +171,13 @@ export default {
   /* Add visual indication for valid fields */
 }
 
+.field-errors {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
 .error-message {
-  /* Default error message styling */
+  /* Individual error message styling */
 }
 </style>

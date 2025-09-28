@@ -1,103 +1,85 @@
 # Introduction
 
-@vueller/validator is a modern, reactive validation library designed specifically for Vue 3, with support for vanilla JavaScript. It provides zero-configuration auto-validation, real-time language switching, and a clean, modular architecture.
+Universal Validator is a modern, framework-agnostic validation library designed to work seamlessly across different JavaScript environments. Whether you're building with vanilla JavaScript, Vue.js, React, or any other framework, Universal Validator provides a consistent and powerful validation experience.
 
-## Why @vueller/validator?
+## Key Features
 
-### 🔥 **Auto-validation**
-No more manual event listeners or complex setup. Just add `v-rules` and validation happens automatically:
+### 🌐 Universal Compatibility
+- **Framework Agnostic**: Works with any JavaScript framework or vanilla JS
+- **Consistent API**: Same validation logic across all environments
+- **No Dependencies**: Zero external dependencies in the core library
 
-```vue
-<input v-rules="{ required: true, email: true }" name="email" />
-```
+### ⚡ Reactive Validation
+- **Real-time Feedback**: Validate as users type or interact with forms
+- **Automatic UI Updates**: Built-in reactivity for Vue.js applications
+- **Manual Control**: Full control over when and how validation occurs
 
-### ⚡ **Vue 3 Native**
-Built from the ground up for Vue 3's Composition API with full reactivity:
+### 🎯 Scope-based Architecture
+- **Isolated Forms**: Multiple forms on the same page with separate validation states
+- **Global Rules**: Define validation rules once, use them across different scopes
+- **Flexible Data Management**: Each scope maintains its own form data and validation state
 
-```vue
-<script setup>
-import { useValidator } from '@vueller/validator/vue'
+### 🧩 Extensible Design
+- **Custom Rules**: Easy to create and register custom validation rules
+- **Async Support**: Built-in support for asynchronous validation (API calls, etc.)
+- **Rule Composition**: Combine multiple rules for complex validation scenarios
 
-const { errors, isValid, validateField } = useValidator()
-</script>
-```
+### 🌍 Internationalization
+- **Multi-language Support**: Built-in i18n system with locale switching
+- **Custom Messages**: Override default messages with your own
+- **Dynamic Loading**: Load language packs on demand
 
-### 🌍 **Real-time i18n**
-Change languages instantly without page reloads:
+## How It Works
+
+Universal Validator follows a simple but powerful pattern:
+
+1. **Define Rules**: Set up validation rules for your form fields
+2. **Validate Data**: Pass your form data to the validator
+3. **Handle Results**: React to validation results and display errors
+4. **Scope Management**: Use scopes to manage multiple forms independently
 
 ```javascript
-validator.setLocale('pt-BR') // All error messages update automatically
-```
+// 1. Create validator and define rules
+const validator = createValidator();
+validator.setRules('email', { required: true, email: true });
 
-### 🧙‍♂️ **Step-by-step Forms**
-Built-in support for multi-step forms and wizards:
+// 2. Validate data
+const isValid = await validator.validate({ email: 'user@example.com' });
 
-```vue
-<script setup>
-const nextStep = async () => {
-  const isValid = await stepForm.value.validateAll()
-  if (isValid) currentStep.value++
+// 3. Handle results
+if (!isValid) {
+  const errors = validator.errors().allByField();
+  console.log('Validation errors:', errors);
 }
-</script>
 ```
 
-## Comparison with Other Libraries
+## Architecture Overview
 
-| Feature | @vueller/validator | VeeValidate | Vuelidate |
-|---------|-------------------|-------------|-----------|
-| Auto-validation | ✅ Zero config | ❌ Manual setup | ❌ Manual setup |
-| Vue 3 Composition API | ✅ Native | ✅ Supported | ✅ Supported |
-| Real-time i18n | ✅ Built-in | ❌ External plugin | ❌ External plugin |
-| Step-by-step forms | ✅ Built-in | ❌ Manual | ❌ Manual |
-| CSS classes | ✅ Automatic | ❌ Manual | ❌ Manual |
-| Bundle size | ✅ Small | ⚠️ Medium | ✅ Small |
-| TypeScript | ✅ Full support | ✅ Full support | ✅ Full support |
-
-## Philosophy
-
-@vueller/validator follows these core principles:
-
-### **Convention over Configuration**
-```vue
-<!-- This just works - no configuration needed -->
-<input v-rules="{ required: true, email: true }" name="email" />
+```mermaid
+graph TB
+    A[Form Data] --> B[Validator]
+    B --> C[Rule Registry]
+    B --> D[Error Bag]
+    B --> E[I18n Manager]
+    
+    C --> F[Built-in Rules]
+    C --> G[Custom Rules]
+    
+    D --> H[Error Messages]
+    E --> I[Localized Messages]
+    
+    B --> J[Validation Result]
+    J --> K[Success/Failure]
+    J --> L[Error Details]
 ```
 
-### **Reactive by Default**
-```javascript
-// All state is reactive - changes propagate automatically
-const { errors, isValid } = useValidator()
-```
+## Getting Started
 
-### **Progressive Enhancement**
-```vue
-<!-- Start simple -->
-<input v-rules="{ required: true }" name="field" />
-
-<!-- Add complexity as needed -->
-<ValidatorForm :rules="complexRules" @submit="handleSubmit">
-  <!-- Advanced form logic -->
-</ValidatorForm>
-```
-
-### **Developer Experience First**
-- **Auto-completion** - Full TypeScript support
-- **Visual feedback** - Automatic CSS classes
-- **Clear errors** - Descriptive error messages
-- **Debugging** - Built-in development tools
+Ready to start validating? Head over to the [Installation Guide](./installation.md) to get Universal Validator set up in your project.
 
 ## What's Next?
 
-Ready to get started? Here's what to do next:
-
-1. **[Installation →](/guide/installation)** - Install and set up the library
-2. **[Quick Start →](/guide/quick-start)** - Your first validation in 5 minutes
-3. **[Vue 3 Setup →](/guide/vue3-setup)** - Complete Vue 3 integration
-4. **[Examples →](/examples/)** - See real-world examples
-
-## Getting Help
-
-- **[GitHub Issues](https://github.com/vueller/validator/issues)** - Report bugs
-- **[GitHub Discussions](https://github.com/vueller/validator/discussions)** - Ask questions
-- **[API Reference](/api/)** - Detailed API documentation
-- **[Examples](/examples/)** - Working code examples
+- [**Installation**](./installation.md) - Get Universal Validator installed and configured
+- [**Basic Usage**](./basic-usage.md) - Learn the fundamental concepts and API
+- [**Validation Rules**](./validation-rules.md) - Explore all available validation rules
+- [**Advanced Guide**](./advanced.md) - Deep dive into advanced patterns and techniques

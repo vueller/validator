@@ -1,12 +1,12 @@
 import { Rule } from './Rule.js';
+import { validateNumeric } from '../utils/index.js';
 
 /**
  * Numeric rule - validates numeric values
+ * Uses centralized validation logic for consistency
  */
 export class NumericRule extends Rule {
   validate(value, field, allValues) {
-    if (!value) return true; // Let required rule handle empty values
-    
-    return !isNaN(value) && !isNaN(parseFloat(value));
+    return validateNumeric(value);
   }
 }

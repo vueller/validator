@@ -1,7 +1,9 @@
 import { Rule } from './Rule.js';
+import { validateConfirmed } from '../utils/index.js';
 
 /**
  * Confirmed rule - validates that two fields match
+ * Uses centralized validation logic for consistency
  */
 export class ConfirmedRule extends Rule {
   constructor(targetField) {
@@ -9,7 +11,6 @@ export class ConfirmedRule extends Rule {
   }
 
   validate(value, field, allValues) {
-    const targetValue = allValues[this.params.targetField];
-    return value === targetValue;
+    return validateConfirmed(value, this.params.targetField, allValues);
   }
 }

@@ -2,95 +2,108 @@
 layout: home
 
 hero:
-  name: "@vueller/validator"
-  text: "Modern Validator"
-  tagline: "Universal validation library"
+  name: Universal Validator
+  text: Modern Validation Library
+  tagline: Framework-agnostic validation with reactive support for JavaScript and Vue.js applications
   image:
-    src: /hero-image.svg
-    alt: Validator Hero
+    src: /logo.svg
+    alt: Universal Validator
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/
+      link: /guide/installation
     - theme: alt
       text: View on GitHub
       link: https://github.com/vueller/validator
-    - theme: alt
-      text: Examples
-      link: /examples/
 
 features:
-  - icon: 🔥
-    title: Auto-validation
-    details: Zero configuration validation that works automatically on blur/input events with visual feedback.
-    
+  - icon: 🌐
+    title: Universal
+    details: Works with vanilla JavaScript, Vue.js, and any framework
   - icon: ⚡
-    title: Multi-Framework
-    details: Vue 3, Vanilla JS ready. React & Angular integrations coming soon.
-    
+    title: Reactive
+    details: Real-time validation with automatic UI updates
+  - icon: 🎯
+    title: Scope-based
+    details: Multiple forms in the same page with isolated validation
+  - icon: 🧩
+    title: Modular
+    details: Clean architecture with extensible rules system
   - icon: 🌍
-    title: Real-time i18n
-    details: Instant language switching with automatic error message updates in multiple languages.
-    
-  - icon: 🔄
-    title: Reactive Updates
-    details: Automatic reactive updates with Vue 3's reactivity system for seamless user experience.
-    
+    title: i18n Ready
+    details: Built-in internationalization support
   - icon: 🎨
-    title: CSS Classes
-    details: Automatic CSS classes (.valid, .invalid) applied to form fields for instant visual feedback.
-    
-  - icon: 🛠️
-    title: Custom Rules
-    details: Easy to extend with your own validation rules, both synchronous and asynchronous.
-
-  - icon: 📱
-    title: Universal Support
-    details: Core JavaScript engine works everywhere. Framework-specific integrations for optimal developer experience.
-    
-  - icon: 🔷
-    title: TypeScript
-    details: Fully typed with excellent IDE support and autocompletion out of the box.
-    
-  - icon: 🚀
-    title: Performance
-    details: Optimized with debouncing, smart event handling, and minimal bundle size.
+    title: Framework Agnostic
+    details: No dependencies on specific frameworks
 ---
 
-## 🚀 Get Started
+## Quick Example
 
-Ready to add validation to your forms? Choose your preferred approach:
+::: code-group
 
-### Vue 3 Integration
-Perfect for Vue 3 applications with reactive validation and automatic error handling.
+```javascript [JavaScript]
+import { createValidator } from '@vueller/validator';
 
-**[Vue 3 Setup Guide →](./guide/vue/setup)**
+// Create validator and set rules
+const validator = createValidator();
+validator.setRules('email', { required: true, email: true });
+validator.setRules('password', { required: true, min: 8 });
 
-### Vanilla JavaScript  
-Use with any JavaScript project - React, Angular, or plain HTML/JS.
+// Validate with data
+const formData = {
+  email: 'user@example.com',
+  password: 'mypassword123'
+};
 
-**[JavaScript Core Guide →](./guide/js/core)**
+const isValid = await validator.validate(formData);
+console.log('Form is valid:', isValid);
+```
 
-### Interactive Examples
-**[Live Examples →](./examples/)** - See it in action with complete code examples.
+```vue [Vue.js]
+<template>
+  <ValidatorForm v-model="formData" :rules="rules" @submit="handleSubmit">
+    <ValidatorField field="email" v-model="formData.email">
+      <input v-model="formData.email" type="email" placeholder="Email" />
+    </ValidatorField>
+    
+    <ValidatorField field="password" v-model="formData.password">
+      <input v-model="formData.password" type="password" placeholder="Password" />
+    </ValidatorField>
+    
+    <button type="submit">Submit</button>
+  </ValidatorForm>
+</template>
 
-## What's New in v1.2.0
+<script setup>
+import { ref } from 'vue';
+import { ValidatorForm, ValidatorField } from '@vueller/validator/vue';
 
-- 🔥 **Auto-validation** - Automatic blur/input validation with `v-rules`
-- 🎛️ **ValidatorForm props** - `validateOnBlur` and `validateOnInput` 
-- 🌍 **Enhanced i18n** - Real-time language switching
-- 🔄 **Reactive updates** - Vue 3 reactivity system integration
-- 🎨 **CSS classes** - Automatic visual feedback
-- ⚡ **Performance** - Optimized with debouncing
+const formData = ref({ email: '', password: '' });
+const rules = {
+  email: { required: true, email: true },
+  password: { required: true, min: 8 }
+};
 
-[View full changelog →](/changelog)
+const handleSubmit = ({ data, isValid }) => {
+  if (isValid) {
+    console.log('Form submitted:', data);
+  }
+};
+</script>
+```
 
-## Community
+:::
 
-- [GitHub Issues](https://github.com/vueller/validator/issues) - Report bugs or request features
-- [GitHub Discussions](https://github.com/vueller/validator/discussions) - Ask questions and share ideas
-- [NPM Package](https://www.npmjs.com/package/@vueller/validator) - View package details
+## Why Universal Validator?
 
-## License
+### 🚀 **Modern Architecture**
+Built with modern JavaScript patterns, supporting both synchronous and asynchronous validation with a clean, intuitive API.
 
-Released under the [MIT License](https://github.com/vueller/validator/blob/main/LICENSE).
+### 🎯 **Scope Management**
+Handle multiple forms on the same page with isolated validation states, perfect for complex applications.
+
+### ⚡ **Performance Focused**
+Optimized for performance with smart caching, debouncing, and minimal re-renders.
+
+### 🧪 **Battle Tested**
+Comprehensive test suite ensuring reliability across different environments and use cases.
