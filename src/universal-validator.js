@@ -44,7 +44,6 @@ export const validator = {
     return instance.validate(scopeOrData, data);
   },
 
-
   /**
    * Set validation rules for a field in a scope
    * @param {string} fieldName - Field name
@@ -67,7 +66,6 @@ export const validator = {
     const instance = getGlobalValidator();
     instance.setMultipleRules(rules, messages, scope);
   },
-
 
   /**
    * Get form data for a scope
@@ -125,27 +123,6 @@ export const validator = {
   setLocale(locale) {
     const instance = getGlobalValidator();
     instance.setLocale(locale);
-  },
-
-  /**
-   * Load translations with optional custom messages
-   * @param {Object} translations - Translation file object or custom messages object
-   * @param {Object} customMessages - Optional custom messages to override or extend
-   */
-  loadTranslations(translations, customMessages = {}) {
-    const instance = getGlobalValidator();
-    instance.i18nManager.loadTranslations(translations, customMessages);
-  },
-
-  /**
-   * Set messages for a locale
-   * @param {string} locale - Locale code
-   * @param {Object} messages - Messages object
-   * @param {boolean} mergeWithDefaults - Whether to merge with default messages
-   */
-  setMessages(locale, messages, mergeWithDefaults = true) {
-    const instance = getGlobalValidator();
-    instance.i18nManager.setMessages(locale, messages, mergeWithDefaults);
   },
 
   /**

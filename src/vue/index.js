@@ -5,10 +5,8 @@
 
 import { Validator } from '../core/index.js';
 import ValidatorForm from './ValidatorForm.vue';
-import ValidatorField from './ValidatorField.vue';
 import { ValidatorSymbol, useValidator } from './composables.js';
-import { rulesDirective, validateDirective, setGlobalValidator } from './directives/index.js';
-import { globalValidation } from './global-validation.js';
+import { rulesDirective, validateDirective, setGlobalValidator } from './directives.js';
 import { validator as universalValidator, setGlobalValidator as setUniversalValidator } from '../universal-validator.js';
 
 /**
@@ -36,7 +34,6 @@ export function install(app, options = {}) {
 
   // Register components
   app.component('ValidatorForm', ValidatorForm);
-  app.component('ValidatorField', ValidatorField);
 
   // Provide global validator if requested
   if (config.globalValidator) {
@@ -84,17 +81,15 @@ function createGlobalValidator(config) {
 function addGlobalProperties(app, config) {
   app.config.globalProperties.$validator = useValidator;
   app.config.globalProperties.$validatorConfig = config;
-  app.config.globalProperties.$validate = globalValidation;
+  app.config.globalProperties.$validate = universalValidator;
   app.config.globalProperties.$validatorUniversal = universalValidator;
 }
 
 // Export components and composables
 export { 
   ValidatorForm, 
-  ValidatorField, 
   useValidator, 
   ValidatorSymbol, 
-  globalValidation, 
   universalValidator 
 };
 
@@ -104,6 +99,5 @@ export { rulesDirective, validateDirective };
 // Default export for plugin installation
 export default {
   install,
-  ValidatorForm,
-  ValidatorField
+  ValidatorForm
 };

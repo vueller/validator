@@ -15,8 +15,10 @@ Complete examples for vanilla JavaScript applications:
 Vue.js specific examples using the Composition API:
 - **Basic Form Validation** - Contact form with Vue reactivity
 - **Using Composables** - Registration form with `useValidator` composable
+- **ValidatorForm Component** - Automatic error display and form handling
 - **Multiple Forms** - Scoped validation for multiple forms
 - **Custom Rules** - Vue integration with custom validation rules
+
 
 ## 🎯 Example Categories
 

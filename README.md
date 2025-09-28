@@ -23,14 +23,13 @@ npm install @vueller/validator
 ### JavaScript Example
 
 ```javascript
-import { createValidator } from '@vueller/validator';
+import { validator } from '@vueller/validator';
 
-// Create validator and set rules
-const validator = createValidator();
+// Set validation rules
 validator.setRules('email', { required: true, email: true });
 validator.setRules('password', { required: true, min: 8 });
 
-// Validate with data
+// Validate all fields
 const formData = {
   email: 'user@example.com',
   password: 'mypassword123'
@@ -40,7 +39,7 @@ const isValid = await validator.validate(formData);
 console.log('Form is valid:', isValid);
 
 // Validate specific field
-const isEmailValid = await validator.validate().field('email', 'user@example.com');
+const isEmailValid = await validator.validate().field('email');
 console.log('Email is valid:', isEmailValid);
 ```
 
@@ -48,31 +47,36 @@ console.log('Email is valid:', isEmailValid);
 
 ```vue
 <template>
-  <ValidatorForm v-model="formData" :rules="rules" @submit="handleSubmit">
+  <ValidatorForm :rules="rules" @submit="handleSubmit" v-slot="{ values, errors, clear }">
     <div>
-      <ValidatorField field="email" v-model="formData.email">
-        <input v-model="formData.email" type="email" placeholder="Email" />
-      </ValidatorField>
+      <input 
+        v-model="values.email" 
+        name="email"
+        type="email" 
+        placeholder="Email" 
+      />
+      <div v-if="errors.has('email')" class="error">{{ errors.first('email') }}</div>
     </div>
     
     <div>
-      <ValidatorField field="password" v-model="formData.password">
-        <input v-model="formData.password" type="password" placeholder="Password" />
-      </ValidatorField>
+      <input 
+        v-model="values.password" 
+        name="password"
+        type="password" 
+        placeholder="Password" 
+      />
+      <div v-if="errors.has('password')" class="error">{{ errors.first('password') }}</div>
     </div>
     
-    <button type="submit">Submit</button>
+    <div class="form-actions">
+      <button type="submit">Submit</button>
+      <button type="button" @click="clear">Clear</button>
+    </div>
   </ValidatorForm>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { ValidatorForm, ValidatorField } from '@vueller/validator/vue';
-
-const formData = ref({
-  email: '',
-  password: ''
-});
+import { ValidatorForm } from '@vueller/validator/vue';
 
 const rules = {
   email: { required: true, email: true },

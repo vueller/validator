@@ -6,6 +6,7 @@ Complete examples for using the Universal Validator in Vue.js applications.
 
 - [Basic Form Validation](#basic-form-validation)
 - [Using Composables](#using-composables)
+- [ValidatorForm Component](#validatorform-component)
 - [Multiple Forms](#multiple-forms)
 - [Custom Rules](#custom-rules)
 
@@ -285,9 +286,581 @@ label { display: block; margin-top: 10px; font-weight: bold; }
 </style>
 ```
 
+## 🧩 ValidatorForm Component
+
+The `ValidatorForm` component provides automatic error display and form handling with minimal setup. It automatically validates all form elements with `name` attributes that match the provided rules and displays errors automatically.
+
+### Slot Props Available
+
+The ValidatorForm provides these props to its slot. You can access them using `v-slot="{ values, errors, clear }"`:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `values` | Object | Reactive form data (same as formData) |
+| `errors` | ErrorBag | Error bag instance for accessing validation errors |
+| `clear` | Function | Function to clear/reset the form |
+| `validator` | Validator | Validator instance for advanced usage |
+| `isValidating` | Boolean | Currently validating state |
+| `isValid` | Boolean | Form is valid state |
+| `hasErrors` | Boolean | Form has errors state |
+| `validate` | Function | Manual validation function |
+| `reset` | Function | Reset validation state (same as clear) |
+
+> **Note**: The `v-slot` is used directly on the `ValidatorForm` component, not on a template tag.
+
+### Simple Usage (Automatic Error Display)
+
+```vue
+<template>
+  <ValidatorForm :rules="formRules" @submit="handleSubmit">
+    <input v-model="formData.email" name="email" type="email" placeholder="Email" />
+    <input v-model="formData.password" name="password" type="password" placeholder="Password" />
+    <button type="submit">Submit</button>
+  </ValidatorForm>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { ValidatorForm } from '@vueller/validator'
+
+const formData = ref({ email: '', password: '' })
+
+const formRules = {
+  email: { required: true, email: true },
+  password: { required: true, min: 8 }
+}
+
+const handleSubmit = ({ data, isValid }) => {
+  if (isValid) {
+    console.log('Form submitted:', data)
+  }
+}
+</script>
+```
+
+### Advanced Usage (With Slot Props)
+
+```vue
+<template>
+  <ValidatorForm :rules="formRules" @submit="handleSubmit" v-slot="{ values, errors, clear }">
+    <div class="form-field">
+      <input v-model="values.email" name="email" type="email" placeholder="Email" />
+      <div v-if="errors.has('email')" class="error">{{ errors.first('email') }}</div>
+    </div>
+    
+    <div class="form-field">
+      <input v-model="values.password" name="password" type="password" placeholder="Password" />
+      <div v-if="errors.has('password')" class="error">{{ errors.first('password') }}</div>
+    </div>
+    
+    <div class="form-actions">
+      <button type="submit">Submit</button>
+      <button type="button" @click="clear">Clear</button>
+    </div>
+  </ValidatorForm>
+</template>
+
+<script setup>
+import { ValidatorForm } from '@vueller/validator'
+
+const formRules = {
+  email: { required: true, email: true },
+  password: { required: true, min: 8 }
+}
+
+const handleSubmit = ({ data, isValid }) => {
+  if (isValid) {
+    console.log('Form submitted:', data)
+  }
+}
+</script>
+```
+
+### Complete Example with Slot Props
+
+```vue
+<template>
+  <div>
+    <h1>Contact Us</h1>
+    
+    <ValidatorForm 
+      :rules="formRules"
+      @submit="handleSubmit"
+      @validation-success="onSuccess"
+      @validation-error="onError"
+      v-slot="{ values, errors, clear }"
+    >
+        <div class="field-group">
+          <label for="name">Name *</label>
+          <input 
+            id="name"
+            v-model="values.name"
+            name="name"
+            type="text"
+            placeholder="Your full name"
+          />
+          <div v-if="errors.has('name')" class="error-message">
+            {{ errors.first('name') }}
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="email">Email *</label>
+          <input 
+            id="email"
+            v-model="values.email"
+            name="email"
+            type="email"
+            placeholder="your@email.com"
+          />
+          <div v-if="errors.has('email')" class="error-message">
+            {{ errors.first('email') }}
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="subject">Subject *</label>
+          <input 
+            id="subject"
+            v-model="values.subject"
+            name="subject"
+            type="text"
+            placeholder="What's this about?"
+          />
+          <div v-if="errors.has('subject')" class="error-message">
+            {{ errors.first('subject') }}
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="message">Message *</label>
+          <textarea 
+            id="message"
+            v-model="values.message"
+            name="message"
+            placeholder="Tell us more..."
+            rows="5"
+          ></textarea>
+          <div v-if="errors.has('message')" class="error-message">
+            {{ errors.first('message') }}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" :disabled="isSubmitting">
+            {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+          </button>
+          <button type="button" @click="clear" class="clear-button">
+            Clear Form
+          </button>
+        </div>
+    </ValidatorForm>
+
+    <div v-if="showSuccess" class="success-message">
+      ✅ Message sent successfully!
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { ValidatorForm } from '@vueller/validator'
+
+// Form state
+const isSubmitting = ref(false)
+const showSuccess = ref(false)
+
+// Validation rules
+const formRules = {
+  name: { required: true, min: 2 },
+  email: { required: true, email: true },
+  subject: { required: true, min: 5 },
+  message: { required: true, min: 20 }
+}
+
+// Form handlers
+const handleSubmit = async (event) => {
+  try {
+    isSubmitting.value = true
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    console.log('Form submitted:', event.data)
+    
+    showSuccess.value = true
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 3000)
+    
+  } catch (error) {
+    console.error('Submission error:', error)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const onSuccess = (data) => {
+  console.log('Validation successful:', data)
+}
+
+const onError = (data) => {
+  console.log('Validation failed:', data)
+}
+</script>
+
+<style scoped>
+.field-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #374151;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* ValidatorForm automatic classes */
+input.v-valid, textarea.v-valid {
+  border-color: #10b981;
+}
+
+input.v-invalid, textarea.v-invalid {
+  border-color: #ef4444;
+}
+
+button {
+  background: #3b82f6;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.clear-button {
+  background: #6b7280;
+  color: white;
+}
+
+.clear-button:hover {
+  background: #4b5563;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.success-message {
+  background: #f0fdf4;
+  color: #166534;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 20px;
+  border: 1px solid #bbf7d0;
+}
+</style>
+```
+
+### Alternative: Using v-rules with Manual Error Display
+
+If you prefer to handle error display manually, you can use `v-rules` directly:
+
+```vue
+<template>
+  <div>
+    <h1>Contact Us (Manual Error Display)</h1>
+    
+    <ValidatorForm 
+      :rules="formRules"
+      @submit="handleSubmit"
+    >
+      <div class="field-group">
+        <label for="name">Name *</label>
+        <input 
+          id="name"
+          v-model="formData.name"
+          v-rules="formRules.name"
+          name="name"
+          type="text"
+          placeholder="Your full name"
+          :class="{ error: errors.has('name'), valid: !errors.has('name') && formData.name }"
+        />
+        <div v-if="errors.has('name')" class="error-message">
+          {{ errors.first('name') }}
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="email">Email *</label>
+        <input 
+          id="email"
+          v-model="formData.email"
+          v-rules="formRules.email"
+          name="email"
+          type="email"
+          placeholder="your@email.com"
+          :class="{ error: errors.has('email'), valid: !errors.has('email') && formData.email }"
+        />
+        <div v-if="errors.has('email')" class="error-message">
+          {{ errors.first('email') }}
+        </div>
+      </div>
+
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+      </button>
+    </ValidatorForm>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { ValidatorForm, useValidator } from '@vueller/validator'
+
+// Form data
+const formData = ref({
+  name: '',
+  email: ''
+})
+
+// Form state
+const isSubmitting = ref(false)
+
+// Get validator instance for manual error access
+const { validator } = useValidator()
+
+// Validation rules
+const formRules = {
+  name: { required: true, min: 2 },
+  email: { required: true, email: true }
+}
+
+// Reactive errors for manual display
+const errors = computed(() => validator.errors())
+
+// Form handlers
+const handleSubmit = async (event) => {
+  try {
+    isSubmitting.value = true
+    
+    // Validation is handled automatically by ValidatorForm
+    console.log('Form submitted:', formData.value)
+    
+  } catch (error) {
+    console.error('Submission error:', error)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+</script>
+
+<style scoped>
+.error { border-color: #ef4444; }
+.valid { border-color: #10b981; }
+.error-message { color: #ef4444; font-size: 14px; margin-top: 4px; }
+/* ... other styles ... */
+</style>
+```
+
 ## 🔄 Multiple Forms
 
-### Login and Registration on Same Page
+### Multiple Forms on Same Page (No Conflicts)
+
+The ValidatorForm uses unique refs internally, so you can have multiple forms on the same page without conflicts:
+
+```vue
+<template>
+  <div style="display: flex; gap: 20px;">
+    <!-- Login Form -->
+    <div style="flex: 1; padding: 20px; border: 1px solid #ccc;">
+      <h2>Login</h2>
+      <ValidatorForm 
+        :rules="loginRules" 
+        @submit="handleLogin"
+        scope="login"
+      >
+        <div class="field-group">
+          <label>Email</label>
+          <input 
+            v-model="loginData.email"
+            name="email"
+            type="email" 
+            placeholder="Email"
+          />
+        </div>
+
+        <div class="field-group">
+          <label>Password</label>
+          <input 
+            v-model="loginData.password"
+            name="password"
+            type="password" 
+            placeholder="Password"
+          />
+        </div>
+
+        <button type="submit">Login</button>
+      </ValidatorForm>
+    </div>
+
+    <!-- Registration Form -->
+    <div style="flex: 1; padding: 20px; border: 1px solid #ccc;">
+      <h2>Register</h2>
+      <ValidatorForm 
+        :rules="registerRules" 
+        @submit="handleRegister"
+        scope="register"
+      >
+        <div class="field-group">
+          <label>Name</label>
+          <input 
+            v-model="registerData.name"
+            name="name"
+            type="text" 
+            placeholder="Full name"
+          />
+        </div>
+
+        <div class="field-group">
+          <label>Email</label>
+          <input 
+            v-model="registerData.email"
+            name="email"
+            type="email" 
+            placeholder="Email"
+          />
+        </div>
+
+        <div class="field-group">
+          <label>Password</label>
+          <input 
+            v-model="registerData.password"
+            name="password"
+            type="password" 
+            placeholder="Password"
+          />
+        </div>
+
+        <button type="submit">Register</button>
+      </ValidatorForm>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { ValidatorForm } from '@vueller/validator'
+
+// Form data
+const loginData = ref({
+  email: '',
+  password: ''
+})
+
+const registerData = ref({
+  name: '',
+  email: '',
+  password: ''
+})
+
+// Validation rules (scoped)
+const loginRules = {
+  email: { required: true, email: true },
+  password: { required: true, min: 6 }
+}
+
+const registerRules = {
+  name: { required: true, min: 2 },
+  email: { required: true, email: true },
+  password: { required: true, min: 8 }
+}
+
+// Form handlers
+const handleLogin = ({ data, isValid }) => {
+  if (isValid) {
+    console.log('Login successful:', data)
+    alert('Login successful!')
+  }
+}
+
+const handleRegister = ({ data, isValid }) => {
+  if (isValid) {
+    console.log('Registration successful:', data)
+    alert('Registration successful!')
+  }
+}
+</script>
+
+<style scoped>
+.field-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 4px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2563eb;
+}
+</style>
+```
+
+### Login and Registration on Same Page (Legacy Example)
 
 ```vue
 <template>
