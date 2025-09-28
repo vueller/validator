@@ -1,6 +1,6 @@
 {
   "name": "@vueller/validator",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Modern universal validation library with Vue 3, JavaScript support, and upcoming React & Angular integrations",
   "main": "dist/validator.cjs.js",
   "module": "dist/validator.esm.js",
