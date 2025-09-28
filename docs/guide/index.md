@@ -73,6 +73,27 @@ graph TB
     J --> L[Error Details]
 ```
 
+## Comparison with Other Libraries
+
+| Feature | @vueller/validator | VeeValidate | Vuelidate |
+|---------|-------------------|-------------|-----------|
+| Auto-validation | ✅ Zero config | ❌ Manual setup | ❌ Manual setup |
+| Vue 3 Composition API | ✅ Native | ✅ Supported | ✅ Supported |
+| Real-time Localization | ✅ Built-in | ✅ Built-in | ❌ External plugin |
+| CSS classes | ✅ Automatic | ❌ Manual | ❌ Manual |
+| Bundle size | ✅ Small | ⚠️ Medium | ✅ Small |
+| TypeScript | ✅ Full support | ✅ Full support | ✅ Full support |
+
+## Philosophy
+
+@vueller/validator follows these core principles:
+
+### **Convention over Configuration**
+```vue
+<!-- This just works - no configuration needed -->
+<input v-rules="{ required: true, email: true }" name="email" />
+```
+
 ## Getting Started
 
 Ready to start validating? Head over to the [Installation Guide](./installation.md) to get Universal Validator set up in your project.
