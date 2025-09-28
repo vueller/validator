@@ -10,6 +10,8 @@ export class ErrorBag {
     // Internal state for errors
     this.errors = new Map();
     this.listeners = new Set();
+    // Flag to track if manual error display is being used
+    this.usingManualErrors = false;
   }
 
   /**
@@ -58,6 +60,7 @@ export class ErrorBag {
    * @returns {string|null} First error message or null
    */
   first(field) {
+    this.usingManualErrors = true; // Mark that manual error display is being used
     const fieldErrors = this.errors.get(field) || [];
     return fieldErrors.length > 0 ? fieldErrors[0] : null;
   }
@@ -133,6 +136,14 @@ export class ErrorBag {
     return Array.from(this.errors.keys()).filter(field => 
       this.errors.get(field).length > 0
     );
+  }
+
+  /**
+   * Check if manual error display is being used
+   * @returns {boolean} True if manual error display is being used
+   */
+  isUsingManualErrors() {
+    return this.usingManualErrors;
   }
 
   /**

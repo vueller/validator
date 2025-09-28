@@ -48,3 +48,7 @@ coverage/
 docs/node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+
+# Test applications
+test-validator-app/
+test-*.html

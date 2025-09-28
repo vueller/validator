@@ -47,7 +47,7 @@ export default {
     /** Whether to validate fields on blur */
     validateOnBlur: {
       type: Boolean,
-      default: true
+      default: false
     },
 
     /** Whether to validate fields on input */
@@ -66,7 +66,8 @@ export default {
     showErrors: {
       type: Boolean,
       default: true
-    }
+    },
+
   },
 
   emits: [
@@ -141,10 +142,12 @@ export default {
           const fieldName = element.name;
           if (!fieldName || !props.rules[fieldName]) return;
 
-          // Setup error display
-          setupFieldErrorDisplay(element, fieldName);
+          // Only setup automatic error display if not using manual errors
+          if (!validator.errorBag.isUsingManualErrors()) {
+            setupFieldErrorDisplay(element, fieldName);
+          }
           
-          // Setup validation events
+          // Always setup validation events
           setupFieldValidation(element, fieldName);
         });
       });
@@ -231,6 +234,7 @@ export default {
       };
     };
 
+
     // Setup validation on mount
     onMounted(() => {
       setupFormValidation();
@@ -252,7 +256,8 @@ export default {
     // Handle form submission
     const handleSubmit = async (event) => {
       // Validate with current form data
-      const isFormValid = await validator.validate(props.scope, formData);
+      const validationResult = validator.validate(props.scope, formData);
+      const isFormValid = await validationResult.then();
       
       const submitData = {
         data: formData,
