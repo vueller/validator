@@ -18,7 +18,7 @@ async function runTests() {
   // Test 1: Basic Validation
   console.log('=== Test 1: Basic Validation ===');
   const validator = createValidator();
-  
+
   validator.setRules('email', {
     required: true,
     email: true
@@ -42,7 +42,7 @@ async function runTests() {
   // Test 2: Multiple Rules
   console.log('\n=== Test 2: Multiple Rules ===');
   validator.reset();
-  
+
   validator.setRules('password', {
     required: true,
     min: 8,
@@ -62,7 +62,7 @@ async function runTests() {
   // Test 3: Required Rule with Trimming
   console.log('\n=== Test 3: Required Rule Trimming ===');
   validator.reset();
-  
+
   validator.setRules('username', { required: true });
 
   // Whitespace-only string should fail
@@ -78,7 +78,7 @@ async function runTests() {
   // Test 4: Form Validation
   console.log('\n=== Test 4: Form Validation ===');
   const formValidator = new Validator();
-  
+
   formValidator.setMultipleRules({
     email: { required: true, email: true },
     password: { required: true, min: 8 },
@@ -110,7 +110,7 @@ async function runTests() {
   // Test 5: Error Bag
   console.log('\n=== Test 5: Error Bag ===');
   const errors = formValidator.errors();
-  
+
   console.assert(errors.has('confirmPassword'), '❌ Should have confirmPassword error');
   console.log('✅ Error bag correctly identifies field with error');
 
@@ -124,12 +124,16 @@ async function runTests() {
   // Test 6: Custom Rules
   console.log('\n=== Test 6: Custom Rules ===');
   const customValidator = new Validator();
-  
+
   // Add custom rule
-  customValidator.extend('evenNumber', (value) => {
-    if (!value) return true;
-    return Number(value) % 2 === 0;
-  }, 'The {field} field must be an even number.');
+  customValidator.extend(
+    'evenNumber',
+    value => {
+      if (!value) return true;
+      return Number(value) % 2 === 0;
+    },
+    'The {field} field must be an even number.'
+  );
 
   customValidator.setRules('number', {
     required: true,
@@ -149,30 +153,33 @@ async function runTests() {
   // Test 7: Internationalization
   console.log('\n=== Test 7: Internationalization ===');
   const i18nValidator = new Validator({ locale: 'pt' });
-  
+
   i18nValidator.addMessages('pt', {
     required: 'O campo {field} é obrigatório.',
     email: 'O campo {field} deve ser um email válido.'
   });
 
   i18nValidator.setRules('email', { required: true });
-  
+
   await i18nValidator.validateField('email', '');
   const ptError = i18nValidator.errors().first('email').value;
-  
-  console.assert(ptError && typeof ptError === 'string' && ptError.includes('obrigatório'), '❌ Should show Portuguese message');
+
+  console.assert(
+    ptError && typeof ptError === 'string' && ptError.includes('obrigatório'),
+    '❌ Should show Portuguese message'
+  );
   console.log('✅ Internationalization works correctly');
 
   // Test 8: Rule Formats
   console.log('\n=== Test 8: Rule Formats ===');
   const formatValidator = new Validator();
-  
+
   // Object format
   formatValidator.setRules('field1', { required: true, min: 5 });
-  
+
   // String format
   formatValidator.setRules('field2', 'required|min:5');
-  
+
   // Array format
   formatValidator.setRules('field3', ['required', { min: 5 }]);
 
@@ -221,42 +228,44 @@ async function runTests() {
   // Test 11: Unknown Rules (Warning instead of Error)
   console.log('\n=== Test 11: Unknown Rules Handling ===');
   const unknownRuleValidator = new Validator();
-  
+
   // Mock console.warn to capture warnings
   const originalWarn = console.warn;
   let warningMessage = '';
-  console.warn = (message) => {
+  console.warn = message => {
     warningMessage = message;
   };
-  
+
   try {
     // Set rules including an unknown rule
     unknownRuleValidator.setRules('phone', {
       required: true,
-      phone: true,  // This rule doesn't exist
+      phone: true, // This rule doesn't exist
       min: 10
     });
-    
+
     // This should work without throwing an error
     isValid = await unknownRuleValidator.validateField('phone', '123456789');
-    
+
     // Should fail because of min rule (length < 10) and required passes
     console.assert(isValid === false, '❌ Field should fail min rule');
     console.log('✅ Unknown rule is ignored, other rules still work');
-    
+
     // Check that warning was logged
-    console.assert(warningMessage.includes('Unknown validation rule: phone'), '❌ Should log warning about unknown rule');
+    console.assert(
+      warningMessage.includes('Unknown validation rule: phone'),
+      '❌ Should log warning about unknown rule'
+    );
     console.log('✅ Warning is logged for unknown rule');
-    
+
     // Test with valid value (meets min rule)
     isValid = await unknownRuleValidator.validateField('phone', '1234567890');
     console.assert(isValid === true, '❌ Field should pass when meeting valid rules');
     console.log('✅ Validation works correctly when unknown rule is ignored');
-    
   } catch (error) {
     console.assert(false, `❌ Should not throw error for unknown rule: ${error.message}`);
   }
-  
+
   // Restore console.warn
   console.warn = originalWarn;
 

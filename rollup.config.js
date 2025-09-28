@@ -11,10 +11,7 @@ export default [
       file: 'dist/validator.esm.js',
       format: 'es'
     },
-    plugins: [
-      nodeResolve(),
-      commonjs()
-    ]
+    plugins: [nodeResolve(), commonjs()]
   },
   // CommonJS build
   {
@@ -24,10 +21,7 @@ export default [
       format: 'cjs',
       exports: 'named'
     },
-    plugins: [
-      nodeResolve(),
-      commonjs()
-    ]
+    plugins: [nodeResolve(), commonjs()]
   },
   // Vue 3 extension build
   {
@@ -39,11 +33,11 @@ export default [
     external: ['vue'],
     plugins: [
       vue({
-        css: false, // Let PostCSS handle CSS
+        css: false // Let PostCSS handle CSS
       }),
       postcss({
         extract: false,
-        inject: true,
+        inject: true
       }),
       nodeResolve(),
       commonjs()

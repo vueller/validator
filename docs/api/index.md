@@ -5,6 +5,7 @@ Complete API documentation for Universal Validator. This reference covers all cl
 ## 📚 API Modules
 
 ### [Core API](./core.md)
+
 The foundation of Universal Validator, providing framework-agnostic validation functionality:
 
 - **Validator Class** - Main validation engine
@@ -13,6 +14,7 @@ The foundation of Universal Validator, providing framework-agnostic validation f
 - **RuleRegistry Class** - Validation rule management
 
 ### [Vue Components](./vue.md)
+
 Vue.js specific components and composables:
 
 - **ValidatorForm Component** - Form wrapper with validation
@@ -21,6 +23,7 @@ Vue.js specific components and composables:
 - **Plugin Installation** - Global Vue.js setup
 
 ### [Universal API](./universal.md)
+
 Framework-agnostic validation interface:
 
 - **Global Validator Instance** - Pre-configured validator
@@ -80,12 +83,12 @@ await validator.validate(formData.value)
 
 ```javascript
 // Import global validator
-import { validator } from '@vueller/validator/universal'
+import { validator } from '@vueller/validator/universal';
 
 // Use anywhere
-await validator.validate(data)
-validator.setRules(field, rules)
-const errors = validator.getErrors()
+await validator.validate(data);
+validator.setRules(field, rules);
+const errors = validator.getErrors();
 ```
 
 ## 📖 Type Definitions
@@ -94,14 +97,14 @@ const errors = validator.getErrors()
 
 ```typescript
 interface ValidationRules {
-  required?: boolean
-  email?: boolean
-  min?: number
-  max?: number
-  numeric?: boolean
-  pattern?: RegExp
-  confirmed?: string
-  [customRule: string]: any
+  required?: boolean;
+  email?: boolean;
+  min?: number;
+  max?: number;
+  numeric?: boolean;
+  pattern?: RegExp;
+  confirmed?: string;
+  [customRule: string]: any;
 }
 ```
 
@@ -109,10 +112,10 @@ interface ValidationRules {
 
 ```typescript
 interface ValidatorOptions {
-  locale?: string
-  validateOnBlur?: boolean
-  validateOnInput?: boolean
-  stopOnFirstFailure?: boolean
+  locale?: string;
+  validateOnBlur?: boolean;
+  validateOnInput?: boolean;
+  stopOnFirstFailure?: boolean;
 }
 ```
 
@@ -120,17 +123,17 @@ interface ValidatorOptions {
 
 ```typescript
 interface ErrorBagInterface {
-  add(field: string, message: string): void
-  remove(field: string): void
-  clear(): void
-  has(field: string): boolean
-  first(field: string): string | null
-  get(field: string): string[]
-  all(): string[]
-  allByField(): Record<string, string[]>
-  any(): boolean
-  count(): number
-  keys(): string[]
+  add(field: string, message: string): void;
+  remove(field: string): void;
+  clear(): void;
+  has(field: string): boolean;
+  first(field: string): string | null;
+  get(field: string): string[];
+  all(): string[];
+  allByField(): Record<string, string[]>;
+  any(): boolean;
+  count(): number;
+  keys(): string[];
 }
 ```
 
@@ -140,30 +143,38 @@ interface ErrorBagInterface {
 
 ```javascript
 // Synchronous rule
-validator.extend('ruleName', (value, ...params) => {
-  // Return true if valid, false if invalid
-  return validationLogic(value, params)
-}, 'Error message with {field} and {parameter} placeholders')
+validator.extend(
+  'ruleName',
+  (value, ...params) => {
+    // Return true if valid, false if invalid
+    return validationLogic(value, params);
+  },
+  'Error message with {field} and {parameter} placeholders'
+);
 
 // Asynchronous rule
-validator.extend('asyncRule', async (value) => {
-  const result = await apiCall(value)
-  return result.isValid
-}, 'Async validation failed for {field}')
+validator.extend(
+  'asyncRule',
+  async value => {
+    const result = await apiCall(value);
+    return result.isValid;
+  },
+  'Async validation failed for {field}'
+);
 ```
 
 ### Scope Management
 
 ```javascript
 // Multiple forms with isolated validation
-await validator.validate('loginForm', loginData)
-await validator.validate('registerForm', registerData)
+await validator.validate('loginForm', loginData);
+await validator.validate('registerForm', registerData);
 
 // Field-specific validation within scope
-await validator.validate('loginForm').field('email', emailValue)
+await validator.validate('loginForm').field('email', emailValue);
 
 // Scope-specific error retrieval
-const loginErrors = validator.errors().get('loginForm.email')
+const loginErrors = validator.errors().get('loginForm.email');
 ```
 
 ### Framework Integration Patterns
@@ -173,14 +184,14 @@ const loginErrors = validator.errors().get('loginForm.email')
 function useValidator(rules) {
   const [validator] = useState(() => createValidator())
   const [errors, setErrors] = useState({})
-  
+
   useEffect(() => {
     const unsubscribe = validator.subscribe(() => {
       setErrors(validator.errors().allByField())
     })
     return unsubscribe
   }, [validator])
-  
+
   return { validator, errors }
 }
 
@@ -188,7 +199,7 @@ function useValidator(rules) {
 @Injectable()
 export class ValidationService {
   private validator = createValidator()
-  
+
   validate(data: any): Promise<boolean> {
     return this.validator.validate(data)
   }
@@ -198,33 +209,39 @@ export class ValidationService {
 ## 📋 Method Categories
 
 ### Validation Methods
+
 - `validate()` - Main validation method
 - `validateField()` - Single field validation (deprecated)
 - `validateAll()` - All fields validation (deprecated)
 
 ### Rule Management
+
 - `setRules()` - Set rules for single field
 - `setMultipleRules()` - Set rules for multiple fields
 - `extend()` - Add custom validation rule
 
 ### Data Management
+
 - `setData()` - Set form data for scope
 - `getData()` - Get form data from scope
 - `setValue()` - Set single field value
 - `getValue()` - Get single field value
 
 ### Error Handling
+
 - `errors()` - Get ErrorBag instance
 - `isValid()` - Check if validation passed
 - `hasErrors()` - Check if errors exist
 - `reset()` - Reset validation state
 
 ### Internationalization
+
 - `setLocale()` - Set current locale
 - `addMessages()` - Add localized messages
 - `setMessages()` - Set global messages
 
 ### State Management
+
 - `subscribe()` - Listen to validation changes
 - `getState()` - Get reactive state helpers
 - `createVueState()` - Create Vue-compatible state

@@ -16,14 +16,18 @@ describe('End-to-End Integration', () => {
   describe('Complete Form Validation Workflow', () => {
     it('should handle complete user registration form', async () => {
       // Set up form rules
-      validator.setMultipleRules({
-        name: { required: true, min: 2 },
-        email: { required: true, email: true },
-        password: { required: true, min: 8 },
-        confirmPassword: { required: true, confirmed: 'password' },
-        age: { required: true, numeric: true, min: 18 },
-        phone: { required: true, pattern: /^\(\d{2}\)\s\d{4,5}-\d{4}$/ }
-      }, {}, 'registrationForm');
+      validator.setMultipleRules(
+        {
+          name: { required: true, min: 2 },
+          email: { required: true, email: true },
+          password: { required: true, min: 8 },
+          confirmPassword: { required: true, confirmed: 'password' },
+          age: { required: true, numeric: true, min: 18 },
+          phone: { required: true, pattern: /^\(\d{2}\)\s\d{4,5}-\d{4}$/ }
+        },
+        {},
+        'registrationForm'
+      );
 
       // Test valid data
       const validData = {
@@ -63,25 +67,37 @@ describe('End-to-End Integration', () => {
 
     it('should handle multi-step form validation', async () => {
       // Step 1: Personal Information
-      validator.setMultipleRules({
-        firstName: { required: true, min: 2 },
-        lastName: { required: true, min: 2 },
-        email: { required: true, email: true }
-      }, {}, 'personalInfo');
+      validator.setMultipleRules(
+        {
+          firstName: { required: true, min: 2 },
+          lastName: { required: true, min: 2 },
+          email: { required: true, email: true }
+        },
+        {},
+        'personalInfo'
+      );
 
       // Step 2: Address Information
-      validator.setMultipleRules({
-        street: { required: true, min: 5 },
-        city: { required: true, min: 2 },
-        zipCode: { required: true, pattern: /^\d{5}-\d{3}$/ }
-      }, {}, 'addressInfo');
+      validator.setMultipleRules(
+        {
+          street: { required: true, min: 5 },
+          city: { required: true, min: 2 },
+          zipCode: { required: true, pattern: /^\d{5}-\d{3}$/ }
+        },
+        {},
+        'addressInfo'
+      );
 
       // Step 3: Payment Information
-      validator.setMultipleRules({
-        cardNumber: { required: true, pattern: /^\d{4}\s\d{4}\s\d{4}\s\d{4}$/ },
-        expiryDate: { required: true, pattern: /^\d{2}\/\d{2}$/ },
-        cvv: { required: true, pattern: /^\d{3}$/ }
-      }, {}, 'paymentInfo');
+      validator.setMultipleRules(
+        {
+          cardNumber: { required: true, pattern: /^\d{4}\s\d{4}\s\d{4}\s\d{4}$/ },
+          expiryDate: { required: true, pattern: /^\d{2}\/\d{2}$/ },
+          cvv: { required: true, pattern: /^\d{3}$/ }
+        },
+        {},
+        'paymentInfo'
+      );
 
       // Validate each step
       const step1Data = {
@@ -113,10 +129,14 @@ describe('End-to-End Integration', () => {
   describe('Internationalization Workflow', () => {
     it('should handle complete i18n workflow', async () => {
       // Set up rules
-      validator.setMultipleRules({
-        email: { required: true, email: true },
-        password: { required: true, min: 8 }
-      }, {}, 'loginForm');
+      validator.setMultipleRules(
+        {
+          email: { required: true, email: true },
+          password: { required: true, min: 8 }
+        },
+        {},
+        'loginForm'
+      );
 
       // Test with English
       validator.setLocale('en');
@@ -160,27 +180,31 @@ describe('End-to-End Integration', () => {
   describe('Custom Rules Workflow', () => {
     it('should handle custom business rules', async () => {
       // Add custom rules
-      validator.extend('cpf', (value) => {
+      validator.extend('cpf', value => {
         const cpf = value.replace(/\D/g, '');
         return cpf.length === 11 && cpf !== '00000000000';
       });
 
-      validator.extend('cnpj', (value) => {
+      validator.extend('cnpj', value => {
         const cnpj = value.replace(/\D/g, '');
         return cnpj.length === 14 && cnpj !== '00000000000000';
       });
 
-      validator.extend('phoneBR', (value) => {
+      validator.extend('phoneBR', value => {
         const phone = value.replace(/\D/g, '');
         return phone.length === 11 && phone.startsWith('11');
       });
 
       // Set up form with custom rules
-      validator.setMultipleRules({
-        cpf: { required: true, cpf: true },
-        cnpj: { required: true, cnpj: true },
-        phone: { required: true, phoneBR: true }
-      }, {}, 'businessForm');
+      validator.setMultipleRules(
+        {
+          cpf: { required: true, cpf: true },
+          cnpj: { required: true, cnpj: true },
+          phone: { required: true, phoneBR: true }
+        },
+        {},
+        'businessForm'
+      );
 
       // Test valid data
       const validData = {
@@ -237,16 +261,20 @@ describe('End-to-End Integration', () => {
 
       // Set up multiple forms
       const forms = ['form1', 'form2', 'form3', 'form4', 'form5'];
-      
+
       for (const form of forms) {
-        validator.setMultipleRules({
-          email: { required: true, email: true },
-          password: { required: true, min: 8 }
-        }, {}, form);
+        validator.setMultipleRules(
+          {
+            email: { required: true, email: true },
+            password: { required: true, min: 8 }
+          },
+          {},
+          form
+        );
       }
 
       // Validate all forms concurrently
-      const validationPromises = forms.map(form => 
+      const validationPromises = forms.map(form =>
         validator.validate(form, {
           email: 'user@example.com',
           password: 'password123'
@@ -254,7 +282,7 @@ describe('End-to-End Integration', () => {
       );
 
       const results = await Promise.all(validationPromises);
-      
+
       // All should be valid
       results.forEach(result => expect(result).toBe(true));
 
@@ -267,10 +295,14 @@ describe('End-to-End Integration', () => {
 
   describe('Error Recovery Workflow', () => {
     it('should handle validation errors and recovery', async () => {
-      validator.setMultipleRules({
-        email: { required: true, email: true },
-        password: { required: true, min: 8 }
-      }, {}, 'recoveryForm');
+      validator.setMultipleRules(
+        {
+          email: { required: true, email: true },
+          password: { required: true, min: 8 }
+        },
+        {},
+        'recoveryForm'
+      );
 
       // Initial validation with errors
       let isValid = await validator.validate('recoveryForm', {
@@ -309,26 +341,30 @@ describe('End-to-End Integration', () => {
 
   describe('Real-world Scenarios', () => {
     it('should handle e-commerce checkout form', async () => {
-      validator.setMultipleRules({
-        // Customer Information
-        firstName: { required: true, min: 2 },
-        lastName: { required: true, min: 2 },
-        email: { required: true, email: true },
-        phone: { required: true, pattern: /^\(\d{2}\)\s\d{4,5}-\d{4}$/ },
-        
-        // Shipping Address
-        shippingAddress: { required: true, min: 10 },
-        shippingCity: { required: true, min: 2 },
-        shippingZip: { required: true, pattern: /^\d{5}-\d{3}$/ },
-        
-        // Payment
-        cardNumber: { required: true, pattern: /^\d{4}\s\d{4}\s\d{4}\s\d{4}$/ },
-        expiryDate: { required: true, pattern: /^\d{2}\/\d{2}$/ },
-        cvv: { required: true, pattern: /^\d{3}$/ },
-        
-        // Terms
-        acceptTerms: { required: true }
-      }, {}, 'checkoutForm');
+      validator.setMultipleRules(
+        {
+          // Customer Information
+          firstName: { required: true, min: 2 },
+          lastName: { required: true, min: 2 },
+          email: { required: true, email: true },
+          phone: { required: true, pattern: /^\(\d{2}\)\s\d{4,5}-\d{4}$/ },
+
+          // Shipping Address
+          shippingAddress: { required: true, min: 10 },
+          shippingCity: { required: true, min: 2 },
+          shippingZip: { required: true, pattern: /^\d{5}-\d{3}$/ },
+
+          // Payment
+          cardNumber: { required: true, pattern: /^\d{4}\s\d{4}\s\d{4}\s\d{4}$/ },
+          expiryDate: { required: true, pattern: /^\d{2}\/\d{2}$/ },
+          cvv: { required: true, pattern: /^\d{3}$/ },
+
+          // Terms
+          acceptTerms: { required: true }
+        },
+        {},
+        'checkoutForm'
+      );
 
       const checkoutData = {
         firstName: 'John',
@@ -349,13 +385,17 @@ describe('End-to-End Integration', () => {
     });
 
     it('should handle user profile update form', async () => {
-      validator.setMultipleRules({
-        username: { required: true, min: 3, max: 20 },
-        email: { required: true, email: true },
-        bio: { max: 500 },
-        website: { pattern: /^https?:\/\/.+/ },
-        birthDate: { required: true, pattern: /^\d{4}-\d{2}-\d{2}$/ }
-      }, {}, 'profileForm');
+      validator.setMultipleRules(
+        {
+          username: { required: true, min: 3, max: 20 },
+          email: { required: true, email: true },
+          bio: { max: 500 },
+          website: { pattern: /^https?:\/\/.+/ },
+          birthDate: { required: true, pattern: /^\d{4}-\d{2}-\d{2}$/ }
+        },
+        {},
+        'profileForm'
+      );
 
       const profileData = {
         username: 'johndoe',

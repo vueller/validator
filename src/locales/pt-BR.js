@@ -10,7 +10,7 @@ export default {
   numeric: 'O campo {field} deve ser um número.',
   pattern: 'O formato do campo {field} é inválido.',
   confirmed: 'A confirmação do campo {field} não confere.',
-  
+
   // Mensagens adicionais comuns de validação
   alpha: 'O campo {field} pode conter apenas letras.',
   alphaNum: 'O campo {field} pode conter apenas letras e números.',

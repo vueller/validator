@@ -6,9 +6,9 @@ import en from './en.js';
 import ptBR from './pt-BR.js';
 
 export const locales = {
-  'en': en,
+  en: en,
   'pt-BR': ptBR,
-  'pt': ptBR // Alias for pt-BR
+  pt: ptBR // Alias for pt-BR
 };
 
 export { en, ptBR };

@@ -47,7 +47,7 @@ describe('Validator Core', () => {
   describe('Rule Management', () => {
     it('should set rules for a field in scope', () => {
       validator.setRules('email', { required: true, email: true }, {}, 'loginForm');
-      
+
       const rules = validator.getRules('email', 'loginForm');
       expect(rules).toHaveLength(2);
       expect(rules[0].name).toBe('required');
@@ -68,7 +68,7 @@ describe('Validator Core', () => {
 
     it('should check if field has rules', () => {
       validator.setRules('email', { required: true }, {}, 'loginForm');
-      
+
       expect(validator.hasRules('email', 'loginForm')).toBe(true);
       expect(validator.hasRules('password', 'loginForm')).toBe(false);
     });
@@ -85,23 +85,23 @@ describe('Validator Core', () => {
   describe('Data Management', () => {
     it('should set and get data for scope', () => {
       const formData = { email: 'test@example.com', password: 'password123' };
-      
+
       validator.setData(formData, 'loginForm');
       const retrievedData = validator.getData('loginForm');
-      
+
       expect(retrievedData).toEqual(formData);
     });
 
     it('should set and get single field value', () => {
       validator.setValue('email', 'test@example.com', 'loginForm');
-      
+
       expect(validator.getValue('email', 'loginForm')).toBe('test@example.com');
     });
 
     it('should handle multiple scopes independently', () => {
       validator.setData({ email: 'login@test.com' }, 'loginForm');
       validator.setData({ email: 'register@test.com' }, 'registerForm');
-      
+
       expect(validator.getData('loginForm')).toEqual({ email: 'login@test.com' });
       expect(validator.getData('registerForm')).toEqual({ email: 'register@test.com' });
     });
@@ -109,10 +109,14 @@ describe('Validator Core', () => {
 
   describe('Validation', () => {
     beforeEach(() => {
-      validator.setMultipleRules({
-        email: { required: true, email: true },
-        password: { required: true, min: 8 }
-      }, {}, 'loginForm');
+      validator.setMultipleRules(
+        {
+          email: { required: true, email: true },
+          password: { required: true, min: 8 }
+        },
+        {},
+        'loginForm'
+      );
     });
 
     it('should validate all fields in scope', async () => {
@@ -123,7 +127,7 @@ describe('Validator Core', () => {
 
       validator.setData(validData, 'loginForm');
       const isValid = await validator.validateScope('loginForm');
-      
+
       expect(isValid).toBe(true);
     });
 
@@ -135,13 +139,13 @@ describe('Validator Core', () => {
 
       validator.setData(invalidData, 'loginForm');
       const isValid = await validator.validateScope('loginForm');
-      
+
       expect(isValid).toBe(false);
     });
 
     it('should validate single field', async () => {
       validator.setData({ email: 'test@example.com' }, 'loginForm');
-      
+
       const isValid = await validator.validate('loginForm').field('email');
       expect(isValid).toBe(true);
     });
@@ -158,7 +162,7 @@ describe('Validator Core', () => {
       });
 
       expect(validationPromise).toBeInstanceOf(Promise);
-      
+
       const isValid = await validationPromise;
       expect(isValid).toBe(true);
     });
@@ -172,7 +176,7 @@ describe('Validator Core', () => {
     it('should collect validation errors', async () => {
       validator.setData({ email: 'invalid-email' }, 'loginForm');
       await validator.validateScope('loginForm');
-      
+
       const errors = validator.errors();
       expect(errors.has('loginForm.email')).toBe(true);
       expect(errors.get('loginForm.email')).toContain('email');
@@ -181,9 +185,9 @@ describe('Validator Core', () => {
     it('should clear errors for scope', async () => {
       validator.setData({ email: 'invalid-email' }, 'loginForm');
       await validator.validateScope('loginForm');
-      
+
       expect(validator.errors().has('loginForm.email')).toBe(true);
-      
+
       validator.clearScopeErrors('loginForm');
       expect(validator.errors().has('loginForm.email')).toBe(false);
     });
@@ -191,9 +195,9 @@ describe('Validator Core', () => {
     it('should reset all validation state', async () => {
       validator.setData({ email: 'invalid-email' }, 'loginForm');
       await validator.validateScope('loginForm');
-      
+
       expect(validator.errors().has('loginForm.email')).toBe(true);
-      
+
       validator.reset('loginForm');
       expect(validator.errors().has('loginForm.email')).toBe(false);
     });
@@ -201,31 +205,31 @@ describe('Validator Core', () => {
 
   describe('Custom Rules', () => {
     it('should extend validator with custom rule', () => {
-      validator.extend('cpf', (value) => {
+      validator.extend('cpf', value => {
         const cpf = value.replace(/\D/g, '');
         return cpf.length === 11 && cpf !== '00000000000';
       });
 
       validator.setRules('document', { required: true, cpf: true }, {}, 'userForm');
-      
+
       expect(validator.hasRules('document', 'userForm')).toBe(true);
     });
 
     it('should validate with custom rule', async () => {
-      validator.extend('cpf', (value) => {
+      validator.extend('cpf', value => {
         const cpf = value.replace(/\D/g, '');
         return cpf.length === 11 && cpf !== '00000000000';
       });
 
       validator.setRules('document', { required: true, cpf: true }, {}, 'userForm');
-      
+
       const isValid = await validator.validate('userForm').field('document', '12345678901');
       expect(isValid).toBe(true);
     });
   });
 
   describe('Reactivity', () => {
-    it('should notify listeners on state change', (done) => {
+    it('should notify listeners on state change', done => {
       validator.subscribe(() => {
         done();
       });
@@ -236,8 +240,8 @@ describe('Validator Core', () => {
     it('should create Vue state when Vue is available', () => {
       // Mock Vue
       global.Vue = {
-        reactive: jest.fn((obj) => obj),
-        computed: jest.fn((fn) => ({ value: fn() }))
+        reactive: jest.fn(obj => obj),
+        computed: jest.fn(fn => ({ value: fn() }))
       };
 
       const vueState = validator.createVueState();
@@ -264,14 +268,14 @@ describe('Validator Core', () => {
 
     it('should handle validation without data', async () => {
       validator.setRules('email', { required: true }, {}, 'loginForm');
-      
+
       const isValid = await validator.validateScope('loginForm');
       expect(isValid).toBe(false);
     });
 
     it('should handle null and undefined values', async () => {
       validator.setRules('email', { required: true }, {}, 'loginForm');
-      
+
       validator.setData({ email: null }, 'loginForm');
       const isValidNull = await validator.validateScope('loginForm');
       expect(isValidNull).toBe(false);
@@ -283,7 +287,7 @@ describe('Validator Core', () => {
 
     it('should handle empty string values', async () => {
       validator.setRules('email', { required: true }, {}, 'loginForm');
-      
+
       validator.setData({ email: '' }, 'loginForm');
       const isValid = await validator.validateScope('loginForm');
       expect(isValid).toBe(false);

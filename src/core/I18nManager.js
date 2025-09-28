@@ -14,7 +14,7 @@ export class I18nManager {
       fallbackLocale: 'en',
       messages: { ...locales }
     };
-    
+
     this.listeners = new Set();
   }
 
@@ -59,7 +59,7 @@ export class I18nManager {
     if (!this.state.messages[locale]) {
       this.state.messages[locale] = {};
     }
-    
+
     Object.assign(this.state.messages[locale], messages);
     this.notifyListeners();
   }
@@ -81,7 +81,7 @@ export class I18nManager {
       // Replace completely
       this.state.messages[locale] = { ...messages };
     }
-    
+
     this.notifyListeners();
   }
 
@@ -92,19 +92,19 @@ export class I18nManager {
    */
   loadTranslations(translations, customMessages = {}) {
     let messages = {};
-    
+
     // If translations is provided, use it as base
     if (translations && typeof translations === 'object') {
       messages = { ...translations };
     }
-    
+
     // Add or override with custom messages
     if (customMessages && typeof customMessages === 'object') {
       Object.keys(customMessages).forEach(key => {
         messages[key] = customMessages[key];
       });
     }
-    
+
     // Set the messages for current locale
     this.state.messages[this.state.locale] = messages;
     this.notifyListeners();
@@ -128,21 +128,22 @@ export class I18nManager {
    */
   getMessage(rule, field, params = {}, locale = null) {
     const targetLocale = locale || this.state.locale;
-    
+
     // Try to get field-specific message first (field.rule format)
     let message = this.getRawMessage(`${field}.${rule}`, targetLocale);
-    
+
     // If not found, try rule-only message (VeeValidate 3 style)
     if (!message) {
       message = this.getRawMessage(rule, targetLocale);
     }
-    
+
     // Fallback to default locale
     if (!message) {
-      message = this.getRawMessage(`${field}.${rule}`, this.state.fallbackLocale) ||
-                this.getRawMessage(rule, this.state.fallbackLocale);
+      message =
+        this.getRawMessage(`${field}.${rule}`, this.state.fallbackLocale) ||
+        this.getRawMessage(rule, this.state.fallbackLocale);
     }
-    
+
     if (!message) {
       // Final fallback
       message = `The {field} field is invalid.`;
@@ -171,12 +172,12 @@ export class I18nManager {
    */
   formatMessage(message, field, params = {}) {
     const formattedField = this.formatFieldName(field);
-    
+
     const replacements = {
       field: formattedField,
       ...params
     };
-    
+
     return replacePlaceholders(message, replacements);
   }
 

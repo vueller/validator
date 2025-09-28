@@ -3,18 +3,18 @@
  * Testing DOM helpers and validation helpers
  */
 
-import { 
-  getFieldName, 
-  getFormData, 
-  updateFieldClasses, 
+import {
+  getFieldName,
+  getFormData,
+  updateFieldClasses,
   cleanupValidationListeners,
-  debounce 
+  debounce
 } from '../../src/vue/utils/dom-helpers.js';
 
-import { 
-  parseRules, 
-  createValidationHandler, 
-  setupValidationEvents 
+import {
+  parseRules,
+  createValidationHandler,
+  setupValidationEvents
 } from '../../src/vue/utils/validation-helpers.js';
 
 import { Validator } from '../../src/core/index.js';
@@ -25,9 +25,15 @@ const mockElement = (props = {}) => ({
   id: props.id || '',
   classList: {
     classes: new Set(),
-    add: function(className) { this.classes.add(className); },
-    remove: function(className) { this.classes.delete(className); },
-    contains: function(className) { return this.classes.has(className); }
+    add: function (className) {
+      this.classes.add(className);
+    },
+    remove: function (className) {
+      this.classes.delete(className);
+    },
+    contains: function (className) {
+      return this.classes.has(className);
+    }
   },
   closest: jest.fn(),
   addEventListener: jest.fn(),
@@ -44,7 +50,7 @@ describe('Vue Utils - DOM Helpers', () => {
     test('should get field name from name attribute', () => {
       const el = mockElement({ name: 'email' });
       const vnode = mockVNode();
-      
+
       const fieldName = getFieldName(el, vnode);
       expect(fieldName).toBe('email');
     });
@@ -52,7 +58,7 @@ describe('Vue Utils - DOM Helpers', () => {
     test('should get field name from v-model directive', () => {
       const el = mockElement();
       const vnode = mockVNode({ 'onUpdate:username': jest.fn() });
-      
+
       const fieldName = getFieldName(el, vnode);
       expect(fieldName).toBe('username');
     });
@@ -60,7 +66,7 @@ describe('Vue Utils - DOM Helpers', () => {
     test('should get field name from id attribute as fallback', () => {
       const el = mockElement({ id: 'password' });
       const vnode = mockVNode();
-      
+
       const fieldName = getFieldName(el, vnode);
       expect(fieldName).toBe('password');
     });
@@ -68,7 +74,7 @@ describe('Vue Utils - DOM Helpers', () => {
     test('should return null if no field name found', () => {
       const el = mockElement();
       const vnode = mockVNode();
-      
+
       const fieldName = getFieldName(el, vnode);
       expect(fieldName).toBeNull();
     });
@@ -90,7 +96,7 @@ describe('Vue Utils - DOM Helpers', () => {
       };
 
       const formData = getFormData(el);
-      
+
       expect(formData).toEqual({
         email: 'test@example.com',
         password: 'secret123',
@@ -119,7 +125,7 @@ describe('Vue Utils - DOM Helpers', () => {
       };
 
       updateFieldClasses(el, validator, 'email');
-      
+
       expect(el.classList.contains('v-valid')).toBe(true);
       expect(el.classList.contains('v-invalid')).toBe(false);
     });
@@ -133,7 +139,7 @@ describe('Vue Utils - DOM Helpers', () => {
       };
 
       updateFieldClasses(el, validator, 'email');
-      
+
       expect(el.classList.contains('v-invalid')).toBe(true);
       expect(el.classList.contains('v-has-error')).toBe(true);
       expect(el.classList.contains('v-valid')).toBe(false);
@@ -156,7 +162,7 @@ describe('Vue Utils - DOM Helpers', () => {
   });
 
   describe('debounce', () => {
-    test('should debounce function calls', (done) => {
+    test('should debounce function calls', done => {
       const mockFn = jest.fn();
       const debouncedFn = debounce(mockFn, 100);
 
@@ -181,7 +187,7 @@ describe('Vue Utils - Validation Helpers', () => {
   describe('parseRules', () => {
     test('should parse string rules', () => {
       const rules = parseRules('required|email|min:5');
-      
+
       expect(rules).toEqual({
         required: true,
         email: true,
@@ -191,7 +197,7 @@ describe('Vue Utils - Validation Helpers', () => {
 
     test('should parse complex string rules with colons', () => {
       const rules = parseRules('required|pattern:^[A-Z]{2}\\d{4}$|min:6');
-      
+
       expect(rules).toEqual({
         required: true,
         pattern: '^[A-Z]{2}\\d{4}$',
@@ -202,7 +208,7 @@ describe('Vue Utils - Validation Helpers', () => {
     test('should return object rules as-is', () => {
       const originalRules = { required: true, email: true, min: 5 };
       const rules = parseRules(originalRules);
-      
+
       expect(rules).toEqual(originalRules);
     });
 
@@ -218,14 +224,14 @@ describe('Vue Utils - Validation Helpers', () => {
       const validator = {
         validateField: jest.fn().mockResolvedValue(true)
       };
-      
+
       // Mock getFormData
       el.closest = jest.fn().mockReturnValue({
         querySelectorAll: jest.fn().mockReturnValue([])
       });
 
       const handler = createValidationHandler(el, validator, 'email', 'blur');
-      
+
       const mockEvent = {
         target: { value: 'test@example.com' }
       };
@@ -240,13 +246,13 @@ describe('Vue Utils - Validation Helpers', () => {
       const validator = {
         validateField: jest.fn().mockRejectedValue(new Error('Validation failed'))
       };
-      
+
       el.closest = jest.fn().mockReturnValue(null);
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       const handler = createValidationHandler(el, validator, 'email', 'blur');
-      
+
       const mockEvent = {
         target: { value: 'invalid-email' }
       };

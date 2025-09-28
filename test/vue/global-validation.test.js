@@ -33,7 +33,7 @@ describe('Global Validation API', () => {
       isValid: true,
       reset: jest.fn()
     };
-    
+
     // Reset global validator
     setGlobalValidator(null);
   });
@@ -46,30 +46,30 @@ describe('Global Validation API', () => {
 
     test('should validate specific field when fieldName provided', async () => {
       setGlobalValidator(mockValidator);
-      
+
       const result = await globalValidation.validate(null, 'email');
-      
+
       expect(mockValidator.validateField).toHaveBeenCalledWith('email', undefined, {});
       expect(result).toBe(true);
     });
 
     test('should validate all fields when scope provided', async () => {
       setGlobalValidator(mockValidator);
-      
+
       const result = await globalValidation.validate('form1');
-      
+
       expect(mockValidator.validateAll).toHaveBeenCalledWith({});
       expect(result).toBe(true);
     });
 
     test('should return object with field method when no parameters', async () => {
       setGlobalValidator(mockValidator);
-      
+
       const result = globalValidation.validate();
-      
+
       expect(result).toHaveProperty('field');
       expect(typeof result.field).toBe('function');
-      
+
       // Test field method
       await result.field('email');
       expect(mockValidator.validateField).toHaveBeenCalledWith('email', undefined, {});
@@ -87,9 +87,9 @@ describe('Global Validation API', () => {
       mockValidator.errors.mockReturnValue({
         allByField: jest.fn().mockReturnValue(mockErrors)
       });
-      
+
       setGlobalValidator(mockValidator);
-      
+
       const errors = globalValidation.getErrors();
       expect(errors).toEqual(mockErrors);
     });
@@ -97,7 +97,7 @@ describe('Global Validation API', () => {
     test('should handle validator without allByField method', () => {
       mockValidator.errors.mockReturnValue({});
       setGlobalValidator(mockValidator);
-      
+
       const errors = globalValidation.getErrors();
       expect(errors).toEqual({});
     });
@@ -112,7 +112,7 @@ describe('Global Validation API', () => {
     test('should return validator isValid state', () => {
       mockValidator.isValid = false;
       setGlobalValidator(mockValidator);
-      
+
       const isValid = globalValidation.isValid();
       expect(isValid).toBe(false);
     });
@@ -120,7 +120,7 @@ describe('Global Validation API', () => {
     test('should return true as fallback', () => {
       mockValidator.isValid = undefined;
       setGlobalValidator(mockValidator);
-      
+
       const isValid = globalValidation.isValid();
       expect(isValid).toBe(true);
     });
@@ -133,9 +133,9 @@ describe('Global Validation API', () => {
 
     test('should call reset on global validator', () => {
       setGlobalValidator(mockValidator);
-      
+
       globalValidation.reset();
-      
+
       expect(mockValidator.reset).toHaveBeenCalled();
     });
   });
@@ -150,16 +150,15 @@ describe('Global Validation API', () => {
       };
 
       document.activeElement.closest = jest.fn().mockReturnValue(mockForm);
-      
+
       setGlobalValidator(mockValidator);
-      
+
       await globalValidation.validate(null, 'email');
-      
-      expect(mockValidator.validateField).toHaveBeenCalledWith(
-        'email', 
-        'test@example.com', 
-        { email: 'test@example.com', password: 'secret123' }
-      );
+
+      expect(mockValidator.validateField).toHaveBeenCalledWith('email', 'test@example.com', {
+        email: 'test@example.com',
+        password: 'secret123'
+      });
     });
   });
 });

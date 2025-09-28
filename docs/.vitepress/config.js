@@ -1,12 +1,12 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Universal Validator',
   description: 'A modern, framework-agnostic validation library',
-  
+
   themeConfig: {
     logo: '/logo.svg',
-    
+
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Examples', link: '/examples/' },
@@ -27,12 +27,10 @@ export default defineConfig({
         },
         {
           text: 'Advanced',
-          items: [
-            { text: 'Advanced Guide', link: '/guide/advanced' }
-          ]
+          items: [{ text: 'Advanced Guide', link: '/guide/advanced' }]
         }
       ],
-      
+
       '/examples/': [
         {
           text: 'Examples',
@@ -43,7 +41,7 @@ export default defineConfig({
           ]
         }
       ],
-      
+
       '/api/': [
         {
           text: 'API Reference',
@@ -57,9 +55,7 @@ export default defineConfig({
       ]
     },
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/vueller/validator' }
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/vueller/validator' }],
 
     footer: {
       message: 'Released under the MIT License.',
@@ -79,4 +75,4 @@ export default defineConfig({
     theme: 'github-dark',
     lineNumbers: true
   }
-})
+});

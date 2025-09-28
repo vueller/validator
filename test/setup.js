@@ -55,11 +55,11 @@ global.testUtils = {
 
 // Mock Vue for Vue-related tests
 global.Vue = {
-  ref: (value) => ({ value }),
-  reactive: (obj) => obj,
-  computed: (fn) => ({ value: fn() }),
+  ref: value => ({ value }),
+  reactive: obj => obj,
+  computed: fn => ({ value: fn() }),
   watch: () => {},
-  onMounted: (fn) => fn(),
+  onMounted: fn => fn(),
   onUnmounted: () => {}
 };
 

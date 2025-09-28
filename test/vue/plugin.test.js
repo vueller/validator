@@ -81,9 +81,9 @@ describe('Vue Plugin Installation', () => {
     });
 
     test('should add global properties when requested', () => {
-      const options = { 
+      const options = {
         globalValidator: true,
-        globalProperties: true 
+        globalProperties: true
       };
 
       install(mockApp, options);
@@ -104,7 +104,7 @@ describe('Vue Plugin Installation', () => {
 
   describe('global validator configuration', () => {
     test('should create validator with configuration methods', () => {
-      const options = { 
+      const options = {
         globalValidator: true,
         locale: 'pt-BR',
         validateOnBlur: false
@@ -113,9 +113,7 @@ describe('Vue Plugin Installation', () => {
       install(mockApp, options);
 
       // Get the validator instance from the provide call
-      const provideCall = mockApp.provide.mock.calls.find(call => 
-        typeof call[0] === 'symbol'
-      );
+      const provideCall = mockApp.provide.mock.calls.find(call => typeof call[0] === 'symbol');
       const validator = provideCall[1];
 
       expect(validator).toBeInstanceOf(Validator);
@@ -141,7 +139,7 @@ describe('Vue Plugin Installation', () => {
 
     test('should export components and utilities', () => {
       const vuePlugin = require('../../src/vue/index.js');
-      
+
       expect(vuePlugin.ValidatorForm).toBeDefined();
       expect(vuePlugin.ValidatorField).toBeDefined();
       expect(vuePlugin.useValidator).toBeDefined();
@@ -154,7 +152,7 @@ describe('Vue Plugin Installation', () => {
 
     test('should have default export with install method', () => {
       const vuePlugin = require('../../src/vue/index.js');
-      
+
       expect(vuePlugin.default).toBeDefined();
       expect(vuePlugin.default.install).toBe(install);
       expect(vuePlugin.default.ValidatorForm).toBeDefined();

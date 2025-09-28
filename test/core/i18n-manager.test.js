@@ -39,13 +39,13 @@ describe('I18nManager', () => {
 
     it('should warn when setting non-existent locale', () => {
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
+
       i18nManager.setLocale('nonexistent');
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Locale 'nonexistent' not found")
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -58,7 +58,7 @@ describe('I18nManager', () => {
       };
 
       i18nManager.addMessages('en', messages);
-      
+
       const localeMessages = i18nManager.getMessages('en');
       expect(localeMessages.required).toBe('Field is required');
       expect(localeMessages.email).toBe('Invalid email');
@@ -72,10 +72,14 @@ describe('I18nManager', () => {
       });
 
       // Then set new messages with merge
-      i18nManager.setMessages('en', {
-        required: 'Custom required message',
-        min: 'Too short'
-      }, true);
+      i18nManager.setMessages(
+        'en',
+        {
+          required: 'Custom required message',
+          min: 'Too short'
+        },
+        true
+      );
 
       const messages = i18nManager.getMessages('en');
       expect(messages.required).toBe('Custom required message'); // Overridden
@@ -91,10 +95,14 @@ describe('I18nManager', () => {
       });
 
       // Then set new messages without merge
-      i18nManager.setMessages('en', {
-        required: 'Custom required message',
-        min: 'Too short'
-      }, false);
+      i18nManager.setMessages(
+        'en',
+        {
+          required: 'Custom required message',
+          min: 'Too short'
+        },
+        false
+      );
 
       const messages = i18nManager.getMessages('en');
       expect(messages.required).toBe('Custom required message');
@@ -106,7 +114,7 @@ describe('I18nManager', () => {
   describe('Translation Loading', () => {
     it('should load built-in translations', () => {
       i18nManager.loadTranslations(ptBR);
-      
+
       const messages = i18nManager.getMessages('pt-BR');
       expect(messages.required).toBe('O campo {field} é obrigatório.');
       expect(messages.email).toBe('O campo {field} deve ser um endereço de email válido.');
@@ -119,7 +127,7 @@ describe('I18nManager', () => {
       };
 
       i18nManager.loadTranslations(null, customMessages);
-      
+
       const messages = i18nManager.getMessages('en'); // Current locale
       expect(messages.required).toBe('Custom required message');
       expect(messages.email).toBe('Custom email message');
@@ -132,7 +140,7 @@ describe('I18nManager', () => {
       };
 
       i18nManager.loadTranslations(ptBR, customOverrides);
-      
+
       const messages = i18nManager.getMessages('pt-BR');
       expect(messages.required).toBe('Custom required message'); // Overridden
       expect(messages.email).toBe('O campo {field} deve ser um endereço de email válido.'); // Original
@@ -168,7 +176,7 @@ describe('I18nManager', () => {
     it('should fallback to fallback locale', () => {
       i18nManager.setLocale('nonexistent');
       i18nManager.setFallbackLocale('en');
-      
+
       const message = i18nManager.getMessage('required', 'email');
       expect(message).toContain('email');
     });
@@ -176,7 +184,7 @@ describe('I18nManager', () => {
     it('should use final fallback message', () => {
       i18nManager.setLocale('nonexistent');
       i18nManager.setFallbackLocale('nonexistent');
-      
+
       const message = i18nManager.getMessage('nonexistent', 'field');
       expect(message).toBe('The {field} field is invalid.');
     });
@@ -189,7 +197,7 @@ describe('I18nManager', () => {
   });
 
   describe('Reactivity', () => {
-    it('should notify listeners when locale changes', (done) => {
+    it('should notify listeners when locale changes', done => {
       i18nManager.subscribe(() => {
         done();
       });
@@ -197,7 +205,7 @@ describe('I18nManager', () => {
       i18nManager.setLocale('pt-BR');
     });
 
-    it('should notify listeners when messages are added', (done) => {
+    it('should notify listeners when messages are added', done => {
       i18nManager.subscribe(() => {
         done();
       });
@@ -205,7 +213,7 @@ describe('I18nManager', () => {
       i18nManager.addMessages('en', { required: 'Field is required' });
     });
 
-    it('should notify listeners when translations are loaded', (done) => {
+    it('should notify listeners when translations are loaded', done => {
       i18nManager.subscribe(() => {
         done();
       });
@@ -230,7 +238,7 @@ describe('I18nManager', () => {
     it('should get current state', () => {
       i18nManager.setLocale('pt-BR');
       i18nManager.setFallbackLocale('en');
-      
+
       const state = i18nManager.getState();
       expect(state.locale).toBe('pt-BR');
       expect(state.fallbackLocale).toBe('en');
@@ -240,8 +248,8 @@ describe('I18nManager', () => {
     it('should create Vue state when Vue is available', () => {
       // Mock Vue
       global.Vue = {
-        reactive: jest.fn((obj) => obj),
-        computed: jest.fn((fn) => ({ value: fn() }))
+        reactive: jest.fn(obj => obj),
+        computed: jest.fn(fn => ({ value: fn() }))
       };
 
       const vueState = i18nManager.createVueState();
@@ -274,7 +282,7 @@ describe('I18nManager', () => {
         required: null,
         email: undefined
       });
-      
+
       const messages = i18nManager.getMessages('en');
       expect(messages.required).toBeNull();
       expect(messages.email).toBeUndefined();
@@ -295,33 +303,33 @@ describe('I18nManager', () => {
   describe('Performance', () => {
     it('should handle large number of messages efficiently', () => {
       const startTime = performance.now();
-      
+
       // Add 1000 messages
       const messages = {};
       for (let i = 0; i < 1000; i++) {
         messages[`rule${i}`] = `Message ${i}`;
       }
-      
+
       i18nManager.addMessages('en', messages);
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       expect(duration).toBeLessThan(50); // Should complete in less than 50ms
       expect(Object.keys(i18nManager.getMessages('en'))).toHaveLength(1000);
     });
 
     it('should handle frequent locale changes efficiently', () => {
       const startTime = performance.now();
-      
+
       // Change locale 1000 times
       for (let i = 0; i < 1000; i++) {
         i18nManager.setLocale(i % 2 === 0 ? 'en' : 'pt-BR');
       }
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       expect(duration).toBeLessThan(100); // Should complete in less than 100ms
     });
   });

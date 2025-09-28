@@ -15,7 +15,7 @@ export const ValidatorSymbol = Symbol('validator');
  */
 export function useValidator(options = {}) {
   const validator = new Validator(options);
-  
+
   // Get all reactive state from validator
   const reactiveState = validator.getState();
 

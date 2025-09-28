@@ -1,11 +1,11 @@
-import { 
-  RequiredRule, 
-  MinRule, 
-  MaxRule, 
-  EmailRule, 
-  NumericRule, 
-  PatternRule, 
-  ConfirmedRule 
+import {
+  RequiredRule,
+  MinRule,
+  MaxRule,
+  EmailRule,
+  NumericRule,
+  PatternRule,
+  ConfirmedRule
 } from './rules/index.js';
 import { isObject, isArray, isString, isNumber } from './utils/index.js';
 
@@ -18,7 +18,7 @@ export class RuleRegistry {
   constructor() {
     this.builtInRules = new Map();
     this.customRules = new Map();
-    
+
     // Register built-in rules
     this.registerBuiltInRules();
   }
@@ -141,19 +141,18 @@ export class RuleRegistry {
    */
   parseObjectRules(rules) {
     const ruleInstances = [];
-    
+
     for (const [ruleName, ruleValue] of Object.entries(rules)) {
       if (ruleValue === false) continue; // Skip disabled rules
-      
-      const ruleInstance = ruleValue === true 
-        ? this.create(ruleName)
-        : this.create(ruleName, ruleValue);
-      
+
+      const ruleInstance =
+        ruleValue === true ? this.create(ruleName) : this.create(ruleName, ruleValue);
+
       if (ruleInstance !== null) {
         ruleInstances.push(ruleInstance);
       }
     }
-    
+
     return ruleInstances;
   }
 
@@ -163,9 +162,7 @@ export class RuleRegistry {
    * @returns {Array} Array of rule instances
    */
   parseArrayRules(rules) {
-    return rules
-      .map(rule => this.parseArrayRule(rule))
-      .filter(rule => rule !== null);
+    return rules.map(rule => this.parseArrayRule(rule)).filter(rule => rule !== null);
   }
 
   /**
@@ -177,12 +174,12 @@ export class RuleRegistry {
     if (isString(rule)) {
       return this.parseStringRule(rule);
     }
-    
+
     if (isObject(rule)) {
       const [ruleName, ruleParams] = Object.entries(rule)[0];
       return this.create(ruleName, ruleParams);
     }
-    
+
     // Assume it's already a rule instance
     return rule;
   }
@@ -206,16 +203,16 @@ export class RuleRegistry {
    */
   parseStringRule(rule) {
     const [ruleName, ...params] = rule.split(':');
-    
+
     if (params.length === 0) {
       return this.create(ruleName);
     }
-    
+
     if (params.length === 1) {
       const param = this.parseParameter(params[0]);
       return this.create(ruleName, param);
     }
-    
+
     // Multiple parameters
     return this.create(ruleName, params);
   }
@@ -243,10 +240,7 @@ export class RuleRegistry {
    * @returns {string[]} Array of rule names
    */
   getRuleNames() {
-    return [
-      ...Array.from(this.builtInRules.keys()),
-      ...Array.from(this.customRules.keys())
-    ];
+    return [...Array.from(this.builtInRules.keys()), ...Array.from(this.customRules.keys())];
   }
 
   /**

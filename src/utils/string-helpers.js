@@ -10,10 +10,10 @@
  */
 export function camelCaseToReadable(str) {
   if (typeof str !== 'string') return str;
-  
+
   // Convert camelCase to space-separated words
   const formatted = str.replace(/([A-Z])/g, ' $1').toLowerCase();
-  
+
   // Capitalize first letter
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
@@ -36,14 +36,14 @@ export function capitalize(str) {
  */
 export function replacePlaceholders(template, replacements = {}) {
   if (typeof template !== 'string') return template;
-  
+
   let result = template;
-  
+
   for (const [key, value] of Object.entries(replacements)) {
     const placeholder = new RegExp(`{${key}}`, 'g');
     result = result.replace(placeholder, value);
   }
-  
+
   return result;
 }
 
@@ -68,11 +68,11 @@ export function toString(value) {
   if (value === null || value === undefined) {
     return '';
   }
-  
+
   if (typeof value === 'string') {
     return value;
   }
-  
+
   return String(value);
 }
 
@@ -84,15 +84,15 @@ export function toString(value) {
  */
 export function matchesPattern(str, pattern) {
   if (typeof str !== 'string') return false;
-  
+
   if (pattern instanceof RegExp) {
     return pattern.test(str);
   }
-  
+
   if (typeof pattern === 'string') {
     return new RegExp(pattern).test(str);
   }
-  
+
   return false;
 }
 

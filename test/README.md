@@ -5,14 +5,17 @@ This directory contains comprehensive tests for the Universal Validator library,
 ## 📁 Test Structure
 
 ### **Core Tests** (`/core/`)
+
 - **`validator.test.js`** - Main Validator class functionality
 - **`error-bag.test.js`** - ErrorBag class and error management
 - **`i18n-manager.test.js`** - Internationalization and translation management
 
 ### **Rules Tests** (`/rules/`)
+
 - **`validation-rules.test.js`** - All built-in validation rules (required, email, min, max, etc.)
 
 ### **Vue Tests** (`/vue/`)
+
 - **`composables.test.js`** - Vue composables and reactive integration
 - **`directives.test.js`** - Vue directives functionality
 - **`global-validation.test.js`** - Global validation state management
@@ -20,19 +23,23 @@ This directory contains comprehensive tests for the Universal Validator library,
 - **`utils.test.js`** - Vue utility functions
 
 ### **Integration Tests** (`/integration/`)
+
 - **`end-to-end.test.js`** - Complete validation workflows and real-world scenarios
 
 ### **Legacy Tests**
+
 - **`basic.test.js`** - Original basic functionality tests
 
 ## 🚀 Running Tests
 
 ### **All Tests**
+
 ```bash
 npm test
 ```
 
 ### **Specific Test Categories**
+
 ```bash
 # Core functionality
 npm run test:core
@@ -48,6 +55,7 @@ npm run test:integration
 ```
 
 ### **Development Mode**
+
 ```bash
 # Watch mode for development
 npm run test:watch
@@ -72,6 +80,7 @@ The test suite aims for comprehensive coverage including:
 ## 🧪 Test Categories
 
 ### **1. Core Functionality**
+
 - Validator class instantiation and configuration
 - Rule management (set, get, remove, check)
 - Data management (set, get, update)
@@ -80,6 +89,7 @@ The test suite aims for comprehensive coverage including:
 - Custom rule creation and validation
 
 ### **2. Error Management**
+
 - Error addition and retrieval
 - Error counting and checking
 - Error clearing and reset
@@ -87,6 +97,7 @@ The test suite aims for comprehensive coverage including:
 - Vue state integration
 
 ### **3. Internationalization**
+
 - Locale management and switching
 - Message loading and overriding
 - Translation fallbacks
@@ -94,6 +105,7 @@ The test suite aims for comprehensive coverage including:
 - Multi-language support
 
 ### **4. Validation Rules**
+
 - Built-in rules (required, email, min, max, numeric, pattern, confirmed)
 - Rule parameter validation
 - Edge case handling
@@ -101,6 +113,7 @@ The test suite aims for comprehensive coverage including:
 - Custom rule integration
 
 ### **5. Vue Integration**
+
 - Composable functionality
 - Reactive state management
 - Directive behavior
@@ -108,6 +121,7 @@ The test suite aims for comprehensive coverage including:
 - Component integration
 
 ### **6. End-to-End Workflows**
+
 - Complete form validation
 - Multi-step form handling
 - Internationalization workflows
@@ -118,18 +132,21 @@ The test suite aims for comprehensive coverage including:
 ## 🔧 Test Configuration
 
 ### **Jest Configuration**
+
 - **Environment**: Node.js
 - **Timeout**: 10 seconds
 - **Coverage**: HTML, LCOV, and text reports
 - **Setup**: Global test utilities and mocks
 
 ### **Test Utilities**
+
 - **Mock Data**: Predefined test data generators
 - **Mock Rules**: Common validation rule sets
 - **Performance Mocks**: Timing and performance utilities
 - **Vue Mocks**: Vue.js reactive system mocks
 
 ### **Global Mocks**
+
 - **Console**: Suppressed logging in tests
 - **Vue**: Mocked Vue 3 reactive system
 - **DOM**: Mocked DOM APIs
@@ -145,21 +162,25 @@ The test suite aims for comprehensive coverage including:
 ## 🐛 Debugging Tests
 
 ### **Verbose Output**
+
 ```bash
 npm test -- --verbose
 ```
 
 ### **Specific Test File**
+
 ```bash
 npm test -- test/core/validator.test.js
 ```
 
 ### **Pattern Matching**
+
 ```bash
 npm test -- --testNamePattern="should validate"
 ```
 
 ### **Coverage for Specific Files**
+
 ```bash
 npm run test:coverage -- --collectCoverageFrom="src/core/**/*.js"
 ```
@@ -167,6 +188,7 @@ npm run test:coverage -- --collectCoverageFrom="src/core/**/*.js"
 ## 🔄 Continuous Integration
 
 The test suite is designed to run in CI environments with:
+
 - **No watch mode** - Tests run once and exit
 - **Coverage reporting** - Generates coverage reports
 - **Exit on failure** - Stops on first test failure
@@ -175,6 +197,7 @@ The test suite is designed to run in CI environments with:
 ## 📝 Writing Tests
 
 ### **Test Structure**
+
 ```javascript
 describe('Feature Name', () => {
   beforeEach(() => {
@@ -185,10 +208,10 @@ describe('Feature Name', () => {
     it('should do something specific', async () => {
       // Arrange
       const input = 'test';
-      
+
       // Act
       const result = await functionUnderTest(input);
-      
+
       // Assert
       expect(result).toBe(expected);
     });
@@ -197,6 +220,7 @@ describe('Feature Name', () => {
 ```
 
 ### **Best Practices**
+
 - **Descriptive names** - Clear test descriptions
 - **Single responsibility** - One assertion per test
 - **Setup/teardown** - Proper test isolation
@@ -205,6 +229,7 @@ describe('Feature Name', () => {
 - **Edge cases** - Test boundary conditions
 
 ### **Mock Usage**
+
 - **Minimal mocking** - Only mock external dependencies
 - **Real behavior** - Test actual functionality when possible
 - **Consistent mocks** - Use global test utilities
@@ -213,16 +238,19 @@ describe('Feature Name', () => {
 ## 🚨 Common Issues
 
 ### **Async Tests**
+
 - Always use `async/await` for asynchronous operations
 - Use proper timeout settings for long-running tests
 - Handle promise rejections appropriately
 
 ### **Vue Tests**
+
 - Mock Vue reactive system properly
 - Test both reactive and non-reactive scenarios
 - Handle Vue lifecycle hooks correctly
 
 ### **Performance Tests**
+
 - Use realistic data sizes
 - Set appropriate performance thresholds
 - Consider CI environment limitations

@@ -4,7 +4,11 @@
  */
 
 import { rulesDirective } from '../../src/vue/directives/rules-directive.js';
-import { validateDirective, setGlobalValidator, getGlobalValidator } from '../../src/vue/directives/validate-directive.js';
+import {
+  validateDirective,
+  setGlobalValidator,
+  getGlobalValidator
+} from '../../src/vue/directives/validate-directive.js';
 import { Validator } from '../../src/core/index.js';
 
 // Mock Vue's inject function
@@ -19,9 +23,15 @@ const mockElement = (props = {}) => ({
   id: props.id || '',
   classList: {
     classes: new Set(),
-    add: function(className) { this.classes.add(className); },
-    remove: function(className) { this.classes.delete(className); },
-    contains: function(className) { return this.classes.has(className); }
+    add: function (className) {
+      this.classes.add(className);
+    },
+    remove: function (className) {
+      this.classes.delete(className);
+    },
+    contains: function (className) {
+      return this.classes.has(className);
+    }
   },
   closest: jest.fn().mockReturnValue(null),
   addEventListener: jest.fn(),
@@ -37,7 +47,7 @@ const mockVNode = (props = {}) => ({
   props: props
 });
 
-const mockBinding = (value) => ({
+const mockBinding = value => ({
   value: value
 });
 
@@ -103,7 +113,10 @@ describe('Vue Directives', () => {
 
         rulesDirective.created(el, binding, vnode);
 
-        expect(mockValidator.setRules).toHaveBeenCalledWith('email', { required: true, email: true });
+        expect(mockValidator.setRules).toHaveBeenCalledWith('email', {
+          required: true,
+          email: true
+        });
         expect(el._validatorField).toBe('email');
         expect(el._validatorRules).toEqual({ required: true, email: true });
         expect(el._validatorInstance).toBe(mockValidator);
@@ -123,7 +136,10 @@ describe('Vue Directives', () => {
 
         rulesDirective.updated(el, binding, vnode);
 
-        expect(mockValidator.setRules).toHaveBeenCalledWith('email', { required: true, email: true });
+        expect(mockValidator.setRules).toHaveBeenCalledWith('email', {
+          required: true,
+          email: true
+        });
         expect(el._validatorRules).toEqual({ required: true, email: true });
       });
 
@@ -194,7 +210,10 @@ describe('Vue Directives', () => {
 
         expect(el._validator).toBe(mockValidator);
         expect(el._fieldName).toBe('email');
-        expect(mockValidator.setRules).toHaveBeenCalledWith('email', { required: true, email: true });
+        expect(mockValidator.setRules).toHaveBeenCalledWith('email', {
+          required: true,
+          email: true
+        });
       });
 
       test('should create global validator if no injected validator', async () => {
@@ -222,10 +241,10 @@ describe('Vue Directives', () => {
 
         validateDirective.updated(el, binding, vnode);
 
-        expect(mockValidator.setRules).toHaveBeenCalledWith('email', { 
-          required: true, 
-          email: true, 
-          min: '5' 
+        expect(mockValidator.setRules).toHaveBeenCalledWith('email', {
+          required: true,
+          email: true,
+          min: '5'
         });
       });
     });
@@ -253,16 +272,16 @@ describe('Vue Directives', () => {
   describe('Global Validator Management', () => {
     test('should set and get global validator', () => {
       const validator = new Validator();
-      
+
       setGlobalValidator(validator);
-      
+
       expect(getGlobalValidator()).toBe(validator);
     });
 
     test('should return null initially', () => {
       // Reset global validator
       setGlobalValidator(null);
-      
+
       expect(getGlobalValidator()).toBeNull();
     });
   });

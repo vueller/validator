@@ -44,14 +44,14 @@ describe('ErrorBag', () => {
 
     it('should check if field has errors', () => {
       expect(errorBag.has('email')).toBe(false);
-      
+
       errorBag.add('email', 'Email is required');
       expect(errorBag.has('email')).toBe(true);
     });
 
     it('should check if any field has errors', () => {
       expect(errorBag.any()).toBe(false);
-      
+
       errorBag.add('email', 'Email is required');
       expect(errorBag.any()).toBe(true);
     });
@@ -115,7 +115,7 @@ describe('ErrorBag', () => {
   });
 
   describe('Reactivity', () => {
-    it('should notify listeners when errors are added', (done) => {
+    it('should notify listeners when errors are added', done => {
       errorBag.subscribe(() => {
         done();
       });
@@ -123,9 +123,9 @@ describe('ErrorBag', () => {
       errorBag.add('email', 'Email is required');
     });
 
-    it('should notify listeners when errors are removed', (done) => {
+    it('should notify listeners when errors are removed', done => {
       errorBag.add('email', 'Email is required');
-      
+
       errorBag.subscribe(() => {
         done();
       });
@@ -133,9 +133,9 @@ describe('ErrorBag', () => {
       errorBag.remove('email');
     });
 
-    it('should notify listeners when errors are cleared', (done) => {
+    it('should notify listeners when errors are cleared', done => {
       errorBag.add('email', 'Email is required');
-      
+
       errorBag.subscribe(() => {
         done();
       });
@@ -160,8 +160,8 @@ describe('ErrorBag', () => {
     it('should create Vue state when Vue is available', () => {
       // Mock Vue
       global.Vue = {
-        reactive: jest.fn((obj) => obj),
-        computed: jest.fn((fn) => ({ value: fn() }))
+        reactive: jest.fn(obj => obj),
+        computed: jest.fn(fn => ({ value: fn() }))
       };
 
       const vueState = errorBag.createVueState();
@@ -212,31 +212,31 @@ describe('ErrorBag', () => {
   describe('Performance', () => {
     it('should handle large number of errors efficiently', () => {
       const startTime = performance.now();
-      
+
       // Add 1000 errors
       for (let i = 0; i < 1000; i++) {
         errorBag.add(`field${i}`, `Error ${i}`);
       }
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       expect(duration).toBeLessThan(100); // Should complete in less than 100ms
       expect(errorBag.count()).toBe(1000);
     });
 
     it('should handle frequent add/remove operations', () => {
       const startTime = performance.now();
-      
+
       // Perform 1000 add/remove cycles
       for (let i = 0; i < 1000; i++) {
         errorBag.add('email', `Error ${i}`);
         errorBag.remove('email');
       }
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       expect(duration).toBeLessThan(50); // Should complete in less than 50ms
       expect(errorBag.any()).toBe(false);
     });

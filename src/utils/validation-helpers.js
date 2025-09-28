@@ -25,11 +25,11 @@ export function validateRequired(value) {
  */
 export function validateMin(value, min) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
-  
+
   if (isNumeric(value)) {
     return parseFloat(value) >= min;
   }
-  
+
   return getLength(value) >= min;
 }
 
@@ -41,11 +41,11 @@ export function validateMin(value, min) {
  */
 export function validateMax(value, max) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
-  
+
   if (isNumeric(value)) {
     return parseFloat(value) <= max;
   }
-  
+
   return getLength(value) <= max;
 }
 
@@ -66,9 +66,9 @@ export function validateNumeric(value) {
  */
 export function validateEmail(value) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
-  
+
   if (typeof value !== 'string') return false;
-  
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(value.trim());
 }
@@ -81,9 +81,9 @@ export function validateEmail(value) {
  */
 export function validatePattern(value, pattern) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
-  
+
   if (typeof value !== 'string') return false;
-  
+
   const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern);
   return regex.test(value);
 }
@@ -97,7 +97,7 @@ export function validatePattern(value, pattern) {
  */
 export function validateConfirmed(value, confirmationField, allValues = {}) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
-  
+
   const confirmationValue = allValues[confirmationField];
   return value === confirmationValue;
 }
@@ -111,7 +111,7 @@ export function normalizeValue(value) {
   if (typeof value === 'string') {
     return value.trim();
   }
-  
+
   return value;
 }
 
@@ -125,6 +125,6 @@ export function shouldValidate(value, isRequired = false) {
   if (isRequired) {
     return true; // Always validate required fields
   }
-  
+
   return !isEmpty(value); // Only validate non-empty optional fields
 }

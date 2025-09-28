@@ -4,12 +4,12 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { 
-  RequiredRule, 
-  EmailRule, 
-  MinRule, 
-  MaxRule, 
-  NumericRule, 
+import {
+  RequiredRule,
+  EmailRule,
+  MinRule,
+  MaxRule,
+  NumericRule,
   PatternRule,
   ConfirmedRule
 } from '../../src/rules/index.js';
@@ -321,7 +321,7 @@ describe('Validation Rules', () => {
 
       // Empty value should fail required
       expect(await requiredRule.validate('')).toBe(false);
-      
+
       // Valid email should pass both
       expect(await requiredRule.validate('user@example.com')).toBe(true);
       expect(await emailRule.validate('user@example.com')).toBe(true);
@@ -332,7 +332,7 @@ describe('Validation Rules', () => {
     it('should handle very long strings', async () => {
       const longString = 'a'.repeat(10000);
       const minRule = new MinRule();
-      
+
       expect(await minRule.validate(longString, { min: 1000 })).toBe(true);
       expect(await minRule.validate(longString, { min: 20000 })).toBe(false);
     });
@@ -340,14 +340,14 @@ describe('Validation Rules', () => {
     it('should handle special characters', async () => {
       const emailRule = new EmailRule();
       const specialEmail = 'user+tag@example-domain.co.uk';
-      
+
       expect(await emailRule.validate(specialEmail)).toBe(true);
     });
 
     it('should handle unicode characters', async () => {
       const minRule = new MinRule();
       const unicodeString = 'héllo wörld';
-      
+
       expect(await minRule.validate(unicodeString, { min: 5 })).toBe(true);
     });
   });

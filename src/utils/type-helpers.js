@@ -12,19 +12,19 @@ export function isEmpty(value) {
   if (value === null || value === undefined) {
     return true;
   }
-  
+
   if (typeof value === 'string') {
     return value.trim() === '';
   }
-  
+
   if (Array.isArray(value)) {
     return value.length === 0;
   }
-  
+
   if (typeof value === 'object') {
     return Object.keys(value).length === 0;
   }
-  
+
   return false;
 }
 
@@ -37,7 +37,7 @@ export function isNumeric(value) {
   if (value === null || value === undefined || value === '') {
     return false;
   }
-  
+
   return !isNaN(value) && !isNaN(parseFloat(value));
 }
 
@@ -50,7 +50,7 @@ export function isEmail(value) {
   if (typeof value !== 'string') {
     return false;
   }
-  
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(value);
 }
@@ -118,14 +118,14 @@ export function getLength(value) {
   if (isString(value) || isArray(value)) {
     return value.length;
   }
-  
+
   if (isObject(value)) {
     return Object.keys(value).length;
   }
-  
+
   if (isNumber(value)) {
     return value.toString().length;
   }
-  
+
   return 0;
 }
