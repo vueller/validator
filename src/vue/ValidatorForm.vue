@@ -302,7 +302,15 @@ export default {
     // Slot props object
     const slotProps = computed(() => ({
       values: formData,
-      errors: errors.value,
+      errors: {
+        has: (field) => validator.errorBag.has(field),
+        first: (field) => validator.errorBag.first(field),
+        get: (field) => validator.errorBag.get(field),
+        any: () => validator.errorBag.any(),
+        count: () => validator.errorBag.count(),
+        keys: () => validator.errorBag.keys(),
+        clear: () => validator.errorBag.clear()
+      },
       isValidating: isValidating.value,
       isValid: isValid.value,
       hasErrors: hasErrors.value,
