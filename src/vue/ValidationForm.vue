@@ -16,7 +16,7 @@
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { Validator } from '../core/validator.js';
 import { RuleManager } from '../core/rule-manager.js';
-import { getGlobalValidator } from './plugin.js';
+// Removed circular dependency - will handle global validator differently
 
 export default {
   name: 'ValidationForm',
@@ -52,8 +52,8 @@ export default {
   },
   emits: ['submit', 'update:modelValue', 'validation-success', 'validation-error'],
   setup(props, { emit }) {
-    // Share RuleRegistry and I18nManager with global validator if available
-    const globalValidator = getGlobalValidator();
+    // Create validator instance without global dependency
+    const globalValidator = null;
     
     // Create validator instance
     const validator = new Validator(props.options);

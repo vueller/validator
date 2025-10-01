@@ -9,9 +9,11 @@ export default [
     input: 'src/index.js',
     output: {
       file: 'dist/validator.esm.js',
-      format: 'es'
+      format: 'es',
+      inlineDynamicImports: true
     },
-    plugins: [nodeResolve(), commonjs()]
+    plugins: [nodeResolve(), commonjs()],
+    external: []
   },
   // CommonJS build
   {
@@ -19,16 +21,19 @@ export default [
     output: {
       file: 'dist/validator.cjs.js',
       format: 'cjs',
-      exports: 'named'
+      exports: 'named',
+      inlineDynamicImports: true
     },
-    plugins: [nodeResolve(), commonjs()]
+    plugins: [nodeResolve(), commonjs()],
+    external: []
   },
   // Vue 3 extension build
   {
     input: 'src/vue/index.js',
     output: {
       file: 'dist/validator-vue.esm.js',
-      format: 'es'
+      format: 'es',
+      inlineDynamicImports: true
     },
     external: ['vue'],
     plugins: [
