@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: '@vueller/validator',
   description: 'Modern Validation Library',
+  base: '/validator/',
   
   head: [
     ['link', { rel: 'icon', href: '/logo.svg' }]
