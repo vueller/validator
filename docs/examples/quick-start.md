@@ -392,4 +392,4 @@ const validateApiData = async (data) => {
 4. **Configure I18n**: Adicione suporte a múltiplos idiomas
 5. **Teste Thoroughly**: Valide todos os cenários do seu aplicativo
 
-Para mais informações, consulte a [documentação completa](./refactored-api.md).
+Para mais informações, consulte a [documentação completa](../api/core.md).
