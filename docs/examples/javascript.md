@@ -1,6 +1,6 @@
 # 🟨 JavaScript Examples
 
-Complete examples for using the Universal Validator in vanilla JavaScript applications.
+Complete examples for using @vueller/validator in vanilla JavaScript applications.
 
 ## 📋 Table of Contents
 
@@ -522,49 +522,38 @@ Complete examples for using the Universal Validator in vanilla JavaScript applic
     </form>
 
     <script type="module">
-      import { createValidator } from '@vueller/validator';
+      import { Validator } from '@vueller/validator'
 
-      const validator = createValidator();
+      const validator = new Validator({ locale: 'en' })
 
       // Add custom rules
-      validator.extend(
-        'evenNumber',
-        value => {
-          return Number(value) % 2 === 0;
-        },
-        'The {field} must be an even number'
-      );
+      // Callback-based rule
+      validator.extend('evenNumber', (value) => {
+        if (value === '' || value === null || value === undefined) return true
+        return Number(value) % 2 === 0
+      }, 'The {field} must be an even number')
 
-      validator.extend(
-        'strongPassword',
-        value => {
-          if (!value) return false;
-
-          const hasUpper = /[A-Z]/.test(value);
-          const hasLower = /[a-z]/.test(value);
-          const hasNumber = /\d/.test(value);
-          const hasSpecial = /[!@#$%^&*]/.test(value);
-
-          return hasUpper && hasLower && hasNumber && hasSpecial && value.length >= 8;
-        },
-        'Password must contain uppercase, lowercase, number, and special character'
-      );
+      // Class-based rule
+      class StrongPasswordRule {
+        validate(value) {
+          if (value === '' || value === null || value === undefined) return true
+          const hasUpper = /[A-Z]/.test(value)
+          const hasLower = /[a-z]/.test(value)
+          const hasNumber = /\d/.test(value)
+          const hasSpecial = /[!@#$%^&*]/.test(value)
+          return hasUpper && hasLower && hasNumber && hasSpecial && value.length >= 8
+        }
+        getRuleName() { return 'strongPassword' }
+      }
+      validator.extend('strongPassword', StrongPasswordRule, 'Password must contain uppercase, lowercase, number, and special character')
 
       // Async rule (simulates API check)
-      validator.extend(
-        'uniqueUsername',
-        async value => {
-          if (!value) return true;
-
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Simulate taken usernames
-          const takenUsernames = ['admin', 'user', 'test', 'demo'];
-          return !takenUsernames.includes(value.toLowerCase());
-        },
-        'This username is already taken'
-      );
+      validator.extend('uniqueUsername', async (value) => {
+        if (value === '' || value === null || value === undefined) return true
+        await new Promise(resolve => setTimeout(resolve, 500))
+        const takenUsernames = ['admin', 'user', 'test', 'demo']
+        return !takenUsernames.includes(String(value).toLowerCase())
+      }, 'This username is already taken')
 
       // Set validation rules
       validator.setMultipleRules({
@@ -624,6 +613,30 @@ Complete examples for using the Universal Validator in vanilla JavaScript applic
     </script>
   </body>
 </html>
+```
+
+### Adding Custom Messages and Languages
+
+```js
+import { Validator } from '@vueller/validator'
+
+const v = new Validator({ locale: 'en' })
+
+// Register a custom rule via callback
+v.extend('phone', (value) => {
+  if (value === '' || value === null || value === undefined) return true
+  return /^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(value)
+})
+
+// Add messages per-locale
+v.addMessages('en', { phone: 'The {field} field must be a valid phone number.' })
+v.addMessages('pt-BR', { phone: 'O campo {field} deve ser um telefone válido.' })
+
+// Switch language
+v.setLocale('pt-BR')
+
+// Field-level override example
+v.addMessages('pt-BR', { 'contact.phone': 'Telefone inválido para contato.' })
 ```
 
 ## Next Steps

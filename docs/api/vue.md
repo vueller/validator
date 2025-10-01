@@ -4,7 +4,7 @@ Complete API reference for Vue.js specific components, composables, and utilitie
 
 ## Components
 
-### ValidatorForm
+### ValidationForm
 
 A form wrapper component that provides validation context and handles form submission.
 
@@ -13,11 +13,12 @@ A form wrapper component that provides validation context and handles form submi
 | Prop               | Type      | Default     | Description                            |
 | ------------------ | --------- | ----------- | -------------------------------------- |
 | `modelValue`       | `Object`  | `{}`        | Form data object                       |
-| `rules`            | `Object`  | `{}`        | Validation rules                       |
-| `messages`         | `Object`  | `{}`        | Custom error messages                  |
-| `scope`            | `String`  | `'default'` | Validation scope                       |
+| `rules`            | `Object`  | `{}`        | Validation rules (field -> rules)      |
+| `labels`           | `Object`  | `{}`        | Field labels for i18n messages         |
+| `initialData`      | `Object`  | `{}`        | Initial data (alternative to v-model)  |
 | `validateOnSubmit` | `Boolean` | `true`      | Validate on form submission            |
-| `resetOnSuccess`   | `Boolean` | `false`     | Reset form after successful validation |
+| `validateOnBlur`   | `Boolean` | `true`      | Validate on blur event                 |
+| `validateOnInput`  | `Boolean` | `false`     | Validate on input event                |
 
 #### Events
 
@@ -32,19 +33,21 @@ A form wrapper component that provides validation context and handles form submi
 
 | Slot      | Props                                  | Description       |
 | --------- | -------------------------------------- | ----------------- |
-| `default` | `{ errors, isValid, validate, reset }` | Main form content |
+| `default` | `{ values, errors, isValid, hasErrors, isValidating, validate, reset }` | Main form content |
 
 #### Example
 
 ```vue
 <template>
-  <ValidatorForm v-model="formData" :rules="rules" scope="registration" @submit="handleSubmit">
-    <template #default="{ errors, isValid }">
-      <input v-model="formData.email" type="email" />
+  <ValidationForm v-model="formData" :rules="rules" @submit="handleSubmit">
+    <template #default="{ values, errors, isValid, hasErrors, isValidating, validate }">
+      <input name="email" v-model="values.email" type="email" />
       <div v-if="errors.has('email')">{{ errors.first('email') }}</div>
-      <button type="submit" :disabled="!isValid">Submit</button>
+      <button type="submit" :disabled="!isValid || isValidating" @click.prevent="validate()">
+        {{ isValidating ? 'Validating...' : 'Submit' }}
+      </button>
     </template>
-  </ValidatorForm>
+  </ValidationForm>
 </template>
 ```
 
@@ -98,7 +101,7 @@ A field wrapper component for individual form field validation.
 
 ## Composables
 
-### useValidator
+### useValidation (alias: useValidator)
 
 A composable that provides validator instance and reactive validation state.
 
@@ -113,37 +116,46 @@ A composable that provides validator instance and reactive validation state.
 | Property    | Type                    | Description                    |
 | ----------- | ----------------------- | ------------------------------ |
 | `validator` | `Validator`             | Validator instance             |
-| `errors`    | `ComputedRef<ErrorBag>` | Reactive errors                |
+| `errors`    | `Object`                | Reactive error helpers         |
+| `formData`  | `ComputedRef<Object>`   | Reactive form data             |
 | `isValid`   | `ComputedRef<Boolean>`  | Reactive validation state      |
 | `hasErrors` | `ComputedRef<Boolean>`  | Reactive error existence check |
-| `validate`  | `Function`              | Validation function            |
-| `reset`     | `Function`              | Reset function                 |
+| `isValidating` | `ComputedRef<Boolean>` | Reactive validation progress |
+| `locale`    | `ComputedRef<String>`   | Current locale                 |
+| `validate`  | `(scope?: string) => Promise<boolean>` | Validate scope |
+| `validateField` | `(field: string, scope?: string) => Promise<boolean>` | Validate field |
+| `setRules`  | `(field: string, rules, scope?: string) => Validator` | Set rules |
+| `setMultipleRules` | `(rulesObject, scope?: string) => Validator` | Set multiple rules |
+| `setValue`  | `(field: string, value: any, scope?: string) => Validator` | Set value |
+| `getValue`  | `(field: string, scope?: string) => any` | Get value |
+| `setFieldLabel` | `(field: string, label: string, scope?: string) => Validator` | Set label |
+| `setLocale` | `(locale: string) => void` | Set locale |
+| `addMessages` | `(locale: string, messages: Record<string,string>) => void` | Add messages |
+| `reset`     | `(scope?: string) => void` | Reset                            |
 
 #### Example
 
 ```vue
 <script setup>
-import { ref, computed } from 'vue';
-import { useValidator } from '@vueller/validator/vue';
+import { useValidation } from '@vueller/validator/vue';
 
-const formData = ref({ email: '', password: '' });
+const { validator, errors, formData, isValid, validate, setLocale } = useValidation({ locale: 'en' });
 
-const { validator, errors, isValid, validate } = useValidator({
-  locale: 'en',
-  validateOnBlur: true
+validator.setMultipleRules({
+  email: { required: true, email: true },
+  password: { required: true, min: 8 }
 });
 
-// Set rules
-validator.setRules('email', { required: true, email: true });
-validator.setRules('password', { required: true, min: 8 });
-
-// Validate form
 const handleSubmit = async () => {
-  const isFormValid = await validate(formData.value);
-  if (isFormValid) {
-    console.log('Form is valid!');
+  const ok = await validate();
+  if (ok) {
+    // submit
   }
 };
+
+// Change locale globally via plugin helper (if plugin installed)
+// import { setGlobalLocale } from '@vueller/validator/vue';
+// setGlobalLocale('pt-BR');
 </script>
 ```
 
@@ -167,16 +179,15 @@ Install the Vue plugin to enable global validator access and components.
 
 ```javascript
 import { createApp } from 'vue';
-import ValidatorPlugin from '@vueller/validator/vue';
+import { createValidationPlugin } from '@vueller/validator/vue';
 import App from './App.vue';
 
 const app = createApp(App);
 
-app.use(ValidatorPlugin, {
+app.use(createValidationPlugin({
   globalValidator: true,
-  locale: 'en',
-  validateOnBlur: true
-});
+  locale: 'en'
+}));
 
 app.mount('#app');
 ```
@@ -232,44 +243,12 @@ const formRules = {
 </script>
 ```
 
-## Global Properties
+## Plugin Helpers
 
-When the plugin is installed with `globalProperties: true`, the following properties are available on all component instances:
+The Vue entry exports helpers when the plugin is used:
 
-### $validator
-
-Global validator instance accessible in all components.
-
-```vue
-<script>
-export default {
-  async mounted() {
-    // Access global validator
-    this.$validator.setRules('email', { required: true, email: true });
-    const isValid = await this.$validator.validate({ email: 'test@test.com' });
-  }
-};
-</script>
-```
-
-### $validate
-
-Global validation function for quick validation.
-
-```vue
-<script>
-export default {
-  methods: {
-    async handleSubmit() {
-      const isValid = await this.$validate(this.formData);
-      if (isValid) {
-        // Form is valid
-      }
-    }
-  }
-};
-</script>
-```
+- `getGlobalValidator()` - access the global validator instance
+- `setGlobalLocale(locale)` - set locale globally (updates `ValidationForm` instances sharing i18n)
 
 ## Reactive State Helpers
 
@@ -331,7 +310,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
-// Inject validator from parent ValidatorForm
+// Inject validator from parent ValidationForm
 const validator = inject('validator');
 
 const hasError = computed(() => validator.errors().has(props.field));
@@ -407,13 +386,14 @@ const { validate, errors } = useScopedValidator('login', {
 ```typescript
 import type { ValidationRules, ValidationMessages } from '@vueller/validator';
 
-interface ValidatorFormProps {
+interface ValidationFormProps {
   modelValue?: Record<string, any>;
   rules?: Record<string, ValidationRules>;
-  messages?: ValidationMessages;
-  scope?: string;
+  labels?: Record<string, string>;
+  initialData?: Record<string, any>;
   validateOnSubmit?: boolean;
-  resetOnSuccess?: boolean;
+  validateOnBlur?: boolean;
+  validateOnInput?: boolean;
 }
 
 interface ValidatorFieldProps {
@@ -430,16 +410,35 @@ interface ValidatorFieldProps {
 ### Composable Types
 
 ```typescript
-import type { Validator, ErrorBag } from '@vueller/validator';
+import type { Validator } from '@vueller/validator';
 import type { ComputedRef } from 'vue';
 
-interface UseValidatorReturn {
+interface UseValidationReturn {
   validator: Validator;
-  errors: ComputedRef<ErrorBag>;
+  errors: {
+    has(field: string): boolean;
+    first(field: string): string | null;
+    get(field: string): string[];
+    allByField(): Record<string, string[]>;
+    any(): boolean;
+    clear(): void;
+    keys(): string[];
+  };
+  formData: ComputedRef<Record<string, any>>;
   isValid: ComputedRef<boolean>;
   hasErrors: ComputedRef<boolean>;
-  validate: (scope?: string, data?: any) => Promise<boolean>;
-  reset: (scope?: string) => void;
+  isValidating: ComputedRef<boolean>;
+  locale: ComputedRef<string>;
+  validate(scope?: string): Promise<boolean>;
+  validateField(field: string, scope?: string): Promise<boolean>;
+  setRules(field: string, rules: any, scope?: string): Validator;
+  setMultipleRules(rulesObject: Record<string, any>, scope?: string): Validator;
+  setValue(field: string, value: any, scope?: string): Validator;
+  getValue(field: string, scope?: string): any;
+  setFieldLabel(field: string, label: string, scope?: string): Validator;
+  setLocale(locale: string): void;
+  addMessages(locale: string, messages: Record<string, string>): void;
+  reset(scope?: string): void;
 }
 ```
 

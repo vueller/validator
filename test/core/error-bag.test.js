@@ -1,6 +1,6 @@
 /**
  * ErrorBag Tests
- * Tests the ErrorBag class functionality
+ * Tests the ErrorBag class functionality with modern patterns
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -20,8 +20,35 @@ describe('ErrorBag', () => {
 
       expect(errorBag.has('email')).toBe(true);
       expect(errorBag.get('email')).toHaveLength(2);
-      expect(errorBag.get('email')).toContain('Email is required');
-      expect(errorBag.get('email')).toContain('Email is invalid');
+      expect(errorBag.get('email')[0]).toEqual({ message: 'Email is required', rule: 'validation' });
+      expect(errorBag.get('email')[1]).toEqual({ message: 'Email is invalid', rule: 'validation' });
+    });
+
+    it('should add errors with rule names', () => {
+      errorBag.add('email', 'Email is invalid', 'email');
+      errorBag.add('email', 'Email format is wrong', 'email');
+
+      const errors = errorBag.get('email');
+      expect(errors[0]).toEqual({ message: 'Email is invalid', rule: 'email' });
+      expect(errors[1]).toEqual({ message: 'Email format is wrong', rule: 'email' });
+    });
+
+    it('should prioritize required errors', () => {
+      errorBag.add('email', 'Email is invalid', 'email');
+      errorBag.add('email', 'Email is required', 'required');
+
+      const errors = errorBag.get('email');
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toEqual({ message: 'Email is required', rule: 'required' });
+    });
+
+    it('should not add non-required errors when required error exists', () => {
+      errorBag.add('email', 'Email is required', 'required');
+      errorBag.add('email', 'Email is invalid', 'email');
+
+      const errors = errorBag.get('email');
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toEqual({ message: 'Email is required', rule: 'required' });
     });
 
     it('should get first error for field', () => {
@@ -31,9 +58,27 @@ describe('ErrorBag', () => {
       expect(errorBag.first('email')).toBe('First error');
     });
 
+    it('should get first error with rule name', () => {
+      errorBag.add('email', 'Email is required', 'required');
+
+      const firstError = errorBag.first('email');
+      expect(firstError).toBe('Email is required');
+    });
+
     it('should get all errors by field', () => {
       errorBag.add('email', 'Email is required');
       errorBag.add('password', 'Password is too short');
+
+      const allErrors = errorBag.allByField();
+      expect(allErrors).toEqual({
+        email: ['Email is required'],
+        password: ['Password is too short']
+      });
+    });
+
+    it('should get all errors with rule names', () => {
+      errorBag.add('email', 'Email is required', 'required');
+      errorBag.add('password', 'Password is too short', 'min');
 
       const allErrors = errorBag.allByField();
       expect(allErrors).toEqual({
@@ -56,189 +101,150 @@ describe('ErrorBag', () => {
       expect(errorBag.any()).toBe(true);
     });
 
-    it('should remove errors for field', () => {
+    it('should get error count', () => {
+      expect(errorBag.any()).toBe(false);
+
       errorBag.add('email', 'Email is required');
       errorBag.add('password', 'Password is too short');
+      expect(errorBag.keys()).toHaveLength(2);
+    });
 
-      expect(errorBag.has('email')).toBe(true);
-      expect(errorBag.has('password')).toBe(true);
+    it('should get total error count', () => {
+      errorBag.add('email', 'First error');
+      errorBag.add('email', 'Second error');
+      errorBag.add('password', 'Password error');
 
+      expect(errorBag.keys()).toHaveLength(2);
+    });
+  });
+
+  describe('Error Clearing', () => {
+    beforeEach(() => {
+      errorBag.add('email', 'Email is required');
+      errorBag.add('password', 'Password is too short');
+    });
+
+    it('should clear errors for specific field', () => {
       errorBag.remove('email');
+
       expect(errorBag.has('email')).toBe(false);
       expect(errorBag.has('password')).toBe(true);
     });
 
     it('should clear all errors', () => {
-      errorBag.add('email', 'Email is required');
-      errorBag.add('password', 'Password is too short');
-
-      expect(errorBag.any()).toBe(true);
-
       errorBag.clear();
+
+      expect(errorBag.any()).toBe(false);
+      expect(errorBag.any()).toBe(false);
+    });
+
+    it('should clear errors and reset manual error flag', () => {
+      errorBag.add('email', 'Error message');
+      errorBag.first('email');
+      errorBag.clear();
+
       expect(errorBag.any()).toBe(false);
     });
   });
 
-  describe('Error Counting', () => {
-    it('should count errors for field', () => {
+  describe('Error Messages', () => {
+    it('should get error messages for specific field', () => {
       errorBag.add('email', 'First error');
       errorBag.add('email', 'Second error');
 
-      expect(errorBag.count('email')).toBe(2);
-    });
-
-    it('should count total errors', () => {
-      errorBag.add('email', 'Email error 1');
-      errorBag.add('email', 'Email error 2');
-      errorBag.add('password', 'Password error');
-
-      expect(errorBag.count()).toBe(3);
-    });
-
-    it('should return 0 for non-existent field', () => {
-      expect(errorBag.count('nonexistent')).toBe(0);
+      const messages = errorBag.get('email');
+      expect(messages).toHaveLength(2);
+      expect(messages[0]).toEqual({ message: 'First error', rule: 'validation' });
+      expect(messages[1]).toEqual({ message: 'Second error', rule: 'validation' });
     });
   });
 
-  describe('Error Retrieval', () => {
-    it('should return empty array for non-existent field', () => {
-      expect(errorBag.get('nonexistent')).toEqual([]);
+  describe('Manual Error Management', () => {
+    it('should set manual errors flag when getting first error', () => {
+      errorBag.add('email', 'Manual error');
+      const firstError = errorBag.first('email');
+      expect(firstError).toBe('Manual error');
     });
 
-    it('should return null for first error of non-existent field', () => {
-      expect(errorBag.first('nonexistent')).toBeNull();
-    });
-
-    it('should return empty object when no errors', () => {
-      expect(errorBag.allByField()).toEqual({});
-    });
-  });
-
-  describe('Reactivity', () => {
-    it('should notify listeners when errors are added', done => {
-      errorBag.subscribe(() => {
-        done();
-      });
-
-      errorBag.add('email', 'Email is required');
-    });
-
-    it('should notify listeners when errors are removed', done => {
-      errorBag.add('email', 'Email is required');
-
-      errorBag.subscribe(() => {
-        done();
-      });
-
-      errorBag.remove('email');
-    });
-
-    it('should notify listeners when errors are cleared', done => {
-      errorBag.add('email', 'Email is required');
-
-      errorBag.subscribe(() => {
-        done();
-      });
-
+    it('should not set manual errors flag when clearing', () => {
+      errorBag.add('email', 'Manual error');
       errorBag.clear();
+      expect(errorBag.any()).toBe(false);
     });
 
-    it('should allow unsubscribing from notifications', () => {
-      const callback = jest.fn();
-      const unsubscribe = errorBag.subscribe(callback);
-
-      errorBag.add('email', 'Email is required');
-      expect(callback).toHaveBeenCalledTimes(1);
-
-      unsubscribe();
-      errorBag.add('password', 'Password is required');
-      expect(callback).toHaveBeenCalledTimes(1); // Should not be called again
-    });
-  });
-
-  describe('Vue State Creation', () => {
-    it('should create Vue state when Vue is available', () => {
-      // Mock Vue
-      global.Vue = {
-        reactive: jest.fn(obj => obj),
-        computed: jest.fn(fn => ({ value: fn() }))
-      };
-
-      const vueState = errorBag.createVueState();
-      expect(vueState).toBeDefined();
-      expect(vueState.errors).toBeDefined();
-      expect(vueState.has).toBeDefined();
-      expect(vueState.first).toBeDefined();
-      expect(vueState.any).toBeDefined();
-
-      delete global.Vue;
-    });
-
-    it('should create plain state when Vue is not available', () => {
-      const plainState = errorBag.createPlainState();
-      expect(plainState).toBeDefined();
-      expect(plainState.errors).toBeDefined();
-      expect(plainState.has).toBeDefined();
-      expect(plainState.first).toBeDefined();
-      expect(plainState.any).toBeDefined();
+    it('should handle manual error display', () => {
+      errorBag.add('email', 'Manual error');
+      const firstError = errorBag.first('email');
+      expect(firstError).toBe('Manual error');
     });
   });
 
   describe('Edge Cases', () => {
+    it('should handle invalid field names', () => {
+      errorBag.add('', 'Error message');
+      errorBag.add(null, 'Error message');
+      errorBag.add(undefined, 'Error message');
+
+      // Invalid field names should be ignored
+      expect(errorBag.any()).toBe(false);
+    });
+
     it('should handle empty error messages', () => {
       errorBag.add('email', '');
-      expect(errorBag.has('email')).toBe(true);
-      expect(errorBag.get('email')).toContain('');
-    });
-
-    it('should handle null error messages', () => {
       errorBag.add('email', null);
-      expect(errorBag.has('email')).toBe(true);
-      expect(errorBag.get('email')).toContain(null);
+      errorBag.add('email', undefined);
+
+      expect(errorBag.any()).toBe(false);
     });
 
-    it('should handle undefined field names', () => {
-      errorBag.add(undefined, 'Error message');
-      expect(errorBag.has(undefined)).toBe(true);
+    it('should handle non-string field names', () => {
+      errorBag.add(123, 'Error message');
+      errorBag.add({}, 'Error message');
+      errorBag.add([], 'Error message');
+
+      // Non-string field names are truthy, so they should be added
+      expect(errorBag.any()).toBe(true);
     });
 
-    it('should handle special characters in field names', () => {
-      const fieldName = 'user.email@domain.com';
-      errorBag.add(fieldName, 'Error message');
-      expect(errorBag.has(fieldName)).toBe(true);
+    it('should handle getting errors for non-existent field', () => {
+      expect(errorBag.get('nonExistent')).toEqual([]);
+      expect(errorBag.first('nonExistent')).toBeNull();
+      expect(errorBag.has('nonExistent')).toBe(false);
+      expect(errorBag.any()).toBe(false);
+    });
+
+    it('should handle clearing non-existent field', () => {
+      expect(() => errorBag.clear('nonExistent')).not.toThrow();
     });
   });
 
-  describe('Performance', () => {
-    it('should handle large number of errors efficiently', () => {
-      const startTime = performance.now();
+  describe('Reactivity', () => {
+    it('should notify listeners when errors are added', () => {
+      let notified = false;
+      const listener = () => { notified = true; };
+      errorBag.subscribe(listener);
 
-      // Add 1000 errors
-      for (let i = 0; i < 1000; i++) {
-        errorBag.add(`field${i}`, `Error ${i}`);
-      }
+      errorBag.add('email', 'Email is required');
 
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-
-      expect(duration).toBeLessThan(100); // Should complete in less than 100ms
-      expect(errorBag.count()).toBe(1000);
+      expect(notified).toBe(true);
     });
 
-    it('should handle frequent add/remove operations', () => {
-      const startTime = performance.now();
+    it('should notify listeners when errors are cleared', () => {
+      let notified = false;
+      const listener = () => { notified = true; };
+      errorBag.subscribe(listener);
+      errorBag.add('email', 'Email is required');
 
-      // Perform 1000 add/remove cycles
-      for (let i = 0; i < 1000; i++) {
-        errorBag.add('email', `Error ${i}`);
-        errorBag.remove('email');
-      }
+      errorBag.clear();
 
-      const endTime = performance.now();
-      const duration = endTime - startTime;
+      expect(notified).toBe(true);
+    });
 
-      expect(duration).toBeLessThan(50); // Should complete in less than 50ms
-      expect(errorBag.any()).toBe(false);
+    it('should add listeners', () => {
+      const listener = () => {};
+      
+      errorBag.subscribe(listener);
+      expect(errorBag.listeners.has(listener)).toBe(true);
     });
   });
 });

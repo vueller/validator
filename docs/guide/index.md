@@ -1,6 +1,6 @@
 # Introduction
 
-Universal Validator is a modern, framework-agnostic validation library designed to work seamlessly across different JavaScript environments. Whether you're building with vanilla JavaScript, Vue.js, React, or any other framework, Universal Validator provides a consistent and powerful validation experience.
+@vueller/validator is a modern, framework-agnostic validation library designed to work seamlessly across different JavaScript environments. Whether you're building with vanilla JavaScript, Vue.js, React, or any other framework, @vueller/validator provides a consistent and powerful validation experience.
 
 ## Key Features
 
@@ -31,7 +31,7 @@ Universal Validator is a modern, framework-agnostic validation library designed 
 
 ## How It Works
 
-Universal Validator follows a simple but powerful pattern:
+@vueller/validator follows a simple but powerful pattern:
 
 1. **Define Rules**: Set up validation rules for your form fields
 2. **Validate Data**: Pass your form data to the validator
@@ -96,11 +96,11 @@ graph TB
 
 ## Getting Started
 
-Ready to start validating? Head over to the [Installation Guide](./installation.md) to get Universal Validator set up in your project.
+Ready to start validating? Head over to the [Installation Guide](./installation.md) to get @vueller/validator set up in your project.
 
 ## What's Next?
 
-- [**Installation**](./installation.md) - Get Universal Validator installed and configured
+- [**Installation**](./installation.md) - Get @vueller/validator installed and configured
 - [**Basic Usage**](./basic-usage.md) - Learn the fundamental concepts and API
 - [**Validation Rules**](./validation-rules.md) - Explore all available validation rules
 - [**Advanced Guide**](./advanced.md) - Deep dive into advanced patterns and techniques

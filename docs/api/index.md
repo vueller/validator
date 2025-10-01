@@ -1,12 +1,12 @@
 # API Reference
 
-Complete API documentation for Universal Validator. This reference covers all classes, methods, and interfaces available in the library.
+Complete API documentation for @vueller/validator. This reference covers all classes, methods, and interfaces available in the library.
 
 ## 📚 API Modules
 
 ### [Core API](./core.md)
 
-The foundation of Universal Validator, providing framework-agnostic validation functionality:
+The foundation of @vueller/validator, providing framework-agnostic validation functionality:
 
 - **Validator Class** - Main validation engine
 - **ErrorBag Class** - Error management and retrieval

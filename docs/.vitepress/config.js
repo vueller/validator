@@ -1,16 +1,20 @@
-import { defineConfig } from 'vitepress';
+import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Universal Validator',
-  description: 'A modern, framework-agnostic validation library',
+  title: '@vueller/validator',
+  description: 'Modern Validation Library',
+  
+  head: [
+    ['link', { rel: 'icon', href: '/logo.svg' }]
+  ],
 
   themeConfig: {
     logo: '/logo.svg',
-
+    
     nav: [
       { text: 'Guide', link: '/guide/' },
-      { text: 'Examples', link: '/examples/' },
       { text: 'API', link: '/api/' },
+      { text: 'Examples', link: '/examples/' },
       { text: 'GitHub', link: 'https://github.com/vueller/validator' }
     ],
 
@@ -19,60 +23,41 @@ export default defineConfig({
         {
           text: 'Getting Started',
           items: [
-            { text: 'Introduction', link: '/guide/' },
             { text: 'Installation', link: '/guide/installation' },
             { text: 'Basic Usage', link: '/guide/basic-usage' },
-            { text: 'Validation Rules', link: '/guide/validation-rules' }
-          ]
-        },
-        {
-          text: 'Advanced',
-          items: [{ text: 'Advanced Guide', link: '/guide/advanced' }]
-        }
-      ],
-
-      '/examples/': [
-        {
-          text: 'Examples',
-          items: [
-            { text: 'Overview', link: '/examples/' },
-            { text: 'JavaScript', link: '/examples/javascript' },
-            { text: 'Vue.js', link: '/examples/vue' }
+            { text: 'Validation Rules', link: '/guide/validation-rules' },
+            { text: 'Advanced', link: '/guide/advanced' }
           ]
         }
       ],
-
       '/api/': [
         {
           text: 'API Reference',
           items: [
-            { text: 'Overview', link: '/api/' },
             { text: 'Core API', link: '/api/core' },
-            { text: 'Vue Components', link: '/api/vue' },
-            { text: 'Universal API', link: '/api/universal' }
+            { text: 'Vue API', link: '/api/vue' }
+          ]
+        }
+      ],
+      '/examples/': [
+        {
+          text: 'Examples',
+          items: [
+            { text: 'JavaScript', link: '/examples/javascript' },
+            { text: 'Vue.js', link: '/examples/vue' },
+            { text: 'Quick Start', link: '/examples/quick-start' }
           ]
         }
       ]
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/vueller/validator' }],
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/vueller/validator' }
+    ],
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024 Vueller Team'
-    },
-
-    editLink: {
-      pattern: 'https://github.com/vueller/validator/edit/main/docs/:path'
-    },
-
-    search: {
-      provider: 'local'
+      copyright: 'Copyright © 2024 @vueller'
     }
-  },
-
-  markdown: {
-    theme: 'github-dark',
-    lineNumbers: true
   }
-});
+})

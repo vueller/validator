@@ -1,6 +1,6 @@
-# 🟢 Vue.js Examples
+# 🟢 Vue 3 Examples
 
-Complete examples for using the Universal Validator in Vue.js applications.
+Complete examples for using the validator with Vue 3.
 
 ## 📋 Table of Contents
 
@@ -10,132 +10,56 @@ Complete examples for using the Universal Validator in Vue.js applications.
 - [Multiple Forms](#multiple-forms)
 - [Custom Rules](#custom-rules)
 
-## 🚀 Basic Form Validation
+## 🚀 Basic Form Validation (Updated)
 
-### Simple Contact Form
+### Simple Contact Form (ValidationForm)
 
 ```vue
 <template>
   <div>
     <h1>Contact Form</h1>
-    
-    <form @submit.prevent="handleSubmit">
+    <ValidationForm :rules="rules" @submit="handleSubmit" v-slot="{ errors }">
       <div>
         <label>Name *</label>
-        <input 
-          v-model="formData.name"
-          type="text" 
-          placeholder="Your name"
-          :class="{ error: errors.has('name'), valid: !errors.has('name') && formData.name }"
-          @blur="validateField('name')"
-        />
-        <div v-if="errors.has('name')" class="error-message">
-          {{ errors.first('name') }}
-        </div>
+        <input id="name" name="name" v-label="'Name'" />
+        <div v-if="errors.has('name')" class="error-message">{{ errors.first('name') }}</div>
       </div>
-
       <div>
         <label>Email *</label>
-        <input 
-          v-model="formData.email"
-          type="email" 
-          placeholder="your@email.com"
-          :class="{ error: errors.has('email'), valid: !errors.has('email') && formData.email }"
-          @blur="validateField('email')"
-        />
-        <div v-if="errors.has('email')" class="error-message">
-          {{ errors.first('email') }}
-        </div>
+        <input id="email" name="email" v-label="'E-mail'" />
+        <div v-if="errors.has('email')" class="error-message">{{ errors.first('email') }}</div>
       </div>
-
       <div>
         <label>Message *</label>
-        <textarea 
-          v-model="formData.message"
-          placeholder="Your message"
-          :class="{ error: errors.has('message'), valid: !errors.has('message') && formData.message }"
-          @blur="validateField('message')"
-        ></textarea>
-        <div v-if="errors.has('message')" class="error-message">
-          {{ errors.first('message') }}
-        </div>
+        <textarea id="message" name="message" v-label="'Message'"></textarea>
+        <div v-if="errors.has('message')" class="error-message">{{ errors.first('message') }}</div>
       </div>
-
-      <button type="submit" :disabled="!isValid || isSubmitting">
-        {{ isSubmitting ? 'Sending...' : 'Send Message' }}
-      </button>
-    </form>
-
-    <div v-if="showSuccess" class="success-message">
-      ✅ Message sent successfully!
-    </div>
+      <button type="submit" :disabled="isSubmitting">{{ isSubmitting ? 'Sending...' : 'Send Message' }}</button>
+    </ValidationForm>
+    <div v-if="showSuccess" class="success-message">✅ Message sent successfully!</div>
   </div>
+  
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useValidator } from '@vueller/validator/vue'
+import { ref } from 'vue'
+import { ValidationForm } from '@vueller/validator/vue'
 
-// Form data
-const formData = ref({
-  name: '',
-  email: '',
-  message: ''
-})
-
-// Form state
 const isSubmitting = ref(false)
 const showSuccess = ref(false)
 
-// Validator setup
-const { validator } = useValidator()
-
-// Set validation rules
-validator.setMultipleRules({
+const rules = ref({
   name: { required: true, min: 2 },
   email: { required: true, email: true },
   message: { required: true, min: 10 }
 })
 
-// Reactive validation state
-const errors = computed(() => validator.errors())
-const isValid = computed(() => validator.isValid())
-
-// Validate single field
-const validateField = async (fieldName) => {
-  await validator.validate().field(fieldName, formData.value[fieldName])
-}
-
-// Handle form submission
 const handleSubmit = async () => {
-  try {
-    isSubmitting.value = true
-    
-    const isFormValid = await validator.validate(formData.value)
-    
-    if (isFormValid) {
-      console.log('Form submitted:', formData.value)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      showSuccess.value = true
-      
-      // Reset form
-      Object.keys(formData.value).forEach(key => {
-        formData.value[key] = ''
-      })
-      validator.reset()
-      
-      setTimeout(() => {
-        showSuccess.value = false
-      }, 3000)
-    }
-  } catch (error) {
-    console.error('Submission error:', error)
-  } finally {
-    isSubmitting.value = false
-  }
+  isSubmitting.value = true
+  await new Promise(r => setTimeout(r, 800))
+  showSuccess.value = true
+  setTimeout(() => (showSuccess.value = false), 2000)
+  isSubmitting.value = false
 }
 </script>
 
@@ -292,19 +216,17 @@ The `ValidatorForm` component provides automatic error display and form handling
 
 ### Slot Props Available
 
-The ValidatorForm provides these props to its slot. You can access them using `v-slot="{ values, errors, clear }"`:
+The ValidatorForm provides these slot props. Use them via `v-slot="{ values, errors, isValid, hasErrors, isValidating, validate, reset }"`:
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `values` | Object | Reactive form data (same as formData) |
-| `errors` | ErrorBag | Error bag instance for accessing validation errors |
-| `clear` | Function | Function to clear/reset the form |
-| `validator` | Validator | Validator instance for advanced usage |
+| `values` | Object | Reactive form data |
+| `errors` | Object | Proxy with `has(field)`, `first(field)`, `get(field)`, `any()` |
 | `isValidating` | Boolean | Currently validating state |
 | `isValid` | Boolean | Form is valid state |
 | `hasErrors` | Boolean | Form has errors state |
-| `validate` | Function | Manual validation function |
-| `reset` | Function | Reset validation state (same as clear) |
+| `validate` | Function | Validate all fields |
+| `reset` | Function | Reset form values and errors |
 
 > **Note**: The `v-slot` is used directly on the `ValidatorForm` component, not on a template tag.
 

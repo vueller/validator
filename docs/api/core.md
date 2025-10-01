@@ -1,6 +1,6 @@
 # 🔧 Core API Reference
 
-Complete reference for the Universal Validator core API.
+Complete reference for the core `Validator`, `ErrorBag`, `I18nManager`, and `RuleRegistry` APIs.
 
 ## Table of Contents
 
@@ -8,7 +8,6 @@ Complete reference for the Universal Validator core API.
 - [ErrorBag Class](#errorbag-class)
 - [I18nManager Class](#i18nmanager-class)
 - [RuleRegistry Class](#ruleregistry-class)
-- [Universal API](#universal-api)
 - [Types & Interfaces](#types--interfaces)
 
 ## Validator Class
@@ -18,23 +17,22 @@ The main validation engine that handles rules, data, and validation logic.
 ### Constructor
 
 ```javascript
-import { createValidator } from '@vueller/validator';
+import { Validator } from '@vueller/validator';
 
-const validator = createValidator(options);
+const validator = new Validator({ locale: 'en' });
 ```
 
 #### Options
 
-| Option               | Type      | Default | Description                          |
-| -------------------- | --------- | ------- | ------------------------------------ |
-| `locale`             | `string`  | `'en'`  | Default locale for error messages    |
-| `validateOnBlur`     | `boolean` | `true`  | Auto-validate fields on blur events  |
-| `validateOnInput`    | `boolean` | `false` | Auto-validate fields on input events |
-| `stopOnFirstFailure` | `boolean` | `false` | Stop validation on first error       |
+| Option                 | Type      | Default | Description                                        |
+| ---------------------- | --------- | ------- | -------------------------------------------------- |
+| `locale`               | `string`  | `'en'`  | Default locale for error messages                  |
+| `stopOnFirstFailure`   | `boolean` | `false` | Stop validating further rules after first failure  |
+| `validateEmptyFields`  | `boolean` | `false` | Validate empty values even when not required       |
 
 ### Methods
 
-#### `setRules(field, rules, messages?)`
+#### `setRules(field, rules, scope='default')`
 
 Set validation rules for a field.
 
@@ -42,26 +40,19 @@ Set validation rules for a field.
 // Basic usage
 validator.setRules('email', { required: true, email: true });
 
-// With custom messages
-validator.setRules(
-  'email',
-  { required: true, email: true },
-  {
-    required: 'Email is required',
-    email: 'Please enter a valid email'
-  }
-);
+// In a specific scope
+validator.setRules('email', { required: true, email: true }, 'loginForm');
 ```
 
 **Parameters:**
 
 - `field` (string) - Field name
-- `rules` (object) - Validation rules object
-- `messages` (object, optional) - Custom error messages
+- `rules` (string|object|array) - Validation rules
+- `scope` (string, optional) - Scope identifier (default: 'default')
 
 **Returns:** `Validator` - Chainable instance
 
-#### `setMultipleRules(rulesObject, messagesObject?)`
+#### `setMultipleRules(rulesObject, scope='default')`
 
 Set validation rules for multiple fields at once.
 
@@ -82,34 +73,27 @@ validator.setMultipleRules(
 **Parameters:**
 
 - `rulesObject` (object) - Object with field names as keys and rules as values
-- `messagesObject` (object, optional) - Custom error messages
+- `scope` (string, optional) - Scope identifier (default: 'default')
 
 **Returns:** `Validator` - Chainable instance
 
-#### `validate(scopeOrData?, data?)`
+#### `validate(scope='default')`
 
-Main validation method with fluent API support.
+Validate all fields in a scope.
 
 ```javascript
-// Validate with data (automatic setData)
-const isValid = await validator.validate({ email: 'test@test.com' });
+// Validate all fields in default scope
+const isValid = await validator.validate();
 
-// Validate with scope and data
-const isValid = await validator.validate('loginForm', { email: 'test@test.com' });
-
-// Get fluent API for field validation
-const isEmailValid = await validator.validate('loginForm').field('email', 'test@test.com');
-
-// Validate all fields in scope
-const isValid = await validator.validate('loginForm');
+// Validate all fields in custom scope
+const isLoginValid = await validator.validate('loginForm');
 ```
 
 **Parameters:**
 
-- `scopeOrData` (string|object, optional) - Scope identifier or data object
-- `data` (object, optional) - Data object when first parameter is scope
+- `scope` (string, optional) - Scope identifier (default: 'default')
 
-**Returns:** `Promise<boolean>` | `FluentAPI` - Validation result or fluent API object
+**Returns:** `Promise<boolean>` - Validation result
 
 #### `setData(data, scope?)`
 
@@ -179,7 +163,7 @@ const loginEmail = validator.getValue('email', 'loginForm');
 
 #### `errors()`
 
-Get the ErrorBag instance for accessing validation errors.
+Get the `ErrorBag` instance for accessing validation errors.
 
 ```javascript
 const errors = validator.errors();
@@ -190,8 +174,8 @@ const hasEmailError = errors.has('email');
 // Get first error for field
 const firstError = errors.first('email');
 
-// Get all errors
-const allErrors = errors.all();
+// Get errors grouped by field
+const allErrors = errors.allByField();
 ```
 
 **Returns:** `ErrorBag` - ErrorBag instance
@@ -216,8 +200,8 @@ const hasErrors = validator.hasErrors();
 
 **Returns:** `boolean` - True if validation errors exist
 
-#### `reset(scope?)`
-
+#### `reset(scope='all')`
+ 
 Reset validation state.
 
 ```javascript
@@ -234,9 +218,9 @@ validator.reset('loginForm');
 
 **Returns:** `Validator` - Chainable instance
 
-#### `extend(ruleName, validator, message?)`
-
-Add custom validation rule.
+#### `extend(name, rule, message?)`
+ 
+Add custom validation rule (callback or class-based).
 
 ```javascript
 // Simple rule
@@ -270,9 +254,9 @@ validator.extend(
 ```
 
 **Parameters:**
-
-- `ruleName` (string) - Name of the custom rule
-- `validator` (function) - Validation function
+ 
+- `name` (string) - Name of the custom rule
+- `rule` (Function|Class) - Validation function or rule class with `validate`
 - `message` (string, optional) - Default error message
 
 **Returns:** `Validator` - Chainable instance
@@ -292,23 +276,13 @@ validator.setLocale('es');
 
 **Returns:** `Validator` - Chainable instance
 
-#### `setMessages(messages)`
+#### `getLocale()`
 
-Set custom error messages globally.
+Get current locale.
 
 ```javascript
-validator.setMessages({
-  required: 'This field is required',
-  email: 'Please enter a valid email address',
-  min: 'This field must be at least {parameter} characters'
-});
+const locale = validator.getLocale();
 ```
-
-**Parameters:**
-
-- `messages` (object) - Object with rule names as keys and messages as values
-
-**Returns:** `Validator` - Chainable instance
 
 #### `addMessages(locale, messages)`
 
@@ -348,28 +322,16 @@ unsubscribe();
 
 **Returns:** `function` - Unsubscribe function
 
-### Fluent API
+### Field Validation
 
-The fluent API is returned when calling `validate()` with a scope but no data.
-
-#### `field(fieldName, fieldValue?)`
+#### `validateField(field, scope='default')`
 
 Validate a specific field.
 
 ```javascript
-// Validate field with existing data
-const isValid = await validator.validate('loginForm').field('email');
-
-// Validate field with new value
-const isValid = await validator.validate('loginForm').field('email', 'test@test.com');
+const ok = await validator.validateField('email');
+const okLogin = await validator.validateField('email', 'loginForm');
 ```
-
-**Parameters:**
-
-- `fieldName` (string) - Field name to validate
-- `fieldValue` (any, optional) - Field value to set before validation
-
-**Returns:** `Promise<boolean>` - True if field is valid
 
 ## ErrorBag Class
 
@@ -450,13 +412,6 @@ Check if there are any errors.
 const hasAnyErrors = errors.any();
 ```
 
-#### `count()`
-
-Get total number of errors.
-
-```javascript
-const errorCount = errors.count();
-```
 
 #### `keys()`
 
@@ -499,7 +454,7 @@ i18n.addMessages('pt-BR', {
 });
 ```
 
-#### `getMessage(rule, field?, parameter?)`
+#### `getMessage(rule, field?, params?)`
 
 Get localized message for a rule.
 
@@ -546,71 +501,10 @@ Get all registered rules.
 const allRules = rules.all();
 ```
 
-## Universal API
+## Notes
 
-Framework-agnostic validation interface.
-
-```javascript
-import { validator } from '@vueller/validator/universal';
-
-// Set rules
-validator.setRules('email', { required: true, email: true });
-
-// Validate
-const isValid = await validator.validate({ email: 'test@test.com' });
-
-// Get errors
-const errors = validator.getErrors();
-
-// Check validity
-const isFormValid = validator.isValid();
-
-// Reset
-validator.reset();
-```
-
-### Methods
-
-#### `validate(scopeOrData?, data?)`
-
-Same as core validator validate method.
-
-#### `setRules(field, rules, messages?)`
-
-Set validation rules for a field.
-
-#### `setMultipleRules(rules, messages?)`
-
-Set validation rules for multiple fields.
-
-#### `getErrors()`
-
-Get current validation errors.
-
-```javascript
-const errors = validator.getErrors();
-// Returns ErrorBag-like object
-```
-
-#### `isValid()`
-
-Check if validation state is valid.
-
-#### `hasErrors()`
-
-Check if there are validation errors.
-
-#### `reset(scope?)`
-
-Reset validation state.
-
-#### `setLocale(locale)`
-
-Set current locale.
-
-#### `addMessages(locale, messages)`
-
-Add localized messages.
+- Messages can reference `{field}` and named parameters provided by rules.
+- Use `setFieldLabel(field, label)` to customize the field display name in messages.
 
 ## Types & Interfaces
 
@@ -688,12 +582,11 @@ interface ErrorBagInterface {
 ### Basic Usage
 
 ```javascript
-import { createValidator } from '@vueller/validator';
+import { Validator } from '@vueller/validator';
 
 // Create validator
-const validator = createValidator({
-  locale: 'en',
-  validateOnBlur: true
+const validator = new Validator({
+  locale: 'en'
 });
 
 // Set rules
@@ -710,7 +603,8 @@ const formData = {
   confirmPassword: 'mypassword123'
 };
 
-const isValid = await validator.validate(formData);
+validator.setData(formData);
+const isValid = await validator.validate();
 
 if (isValid) {
   console.log('Form is valid!');
@@ -726,14 +620,17 @@ if (isValid) {
 const loginData = { email: 'user@test.com', password: '123456' };
 const registerData = { email: 'new@test.com', password: '123456', name: 'John' };
 
+validator.setData(loginData, 'loginForm');
+validator.setData(registerData, 'registerForm');
+
 // Validate login form
-const isLoginValid = await validator.validate('loginForm', loginData);
+const isLoginValid = await validator.validate('loginForm');
 
 // Validate register form
-const isRegisterValid = await validator.validate('registerForm', registerData);
+const isRegisterValid = await validator.validate('registerForm');
 
 // Validate specific field in scope
-const isEmailValid = await validator.validate('loginForm').field('email', 'user@test.com');
+const isEmailValid = await validator.validateField('email', 'loginForm');
 ```
 
 ### Custom Rules
@@ -769,12 +666,13 @@ validator.setLocale('pt-BR');
 validator.addMessages('pt-BR', {
   required: 'O campo {field} é obrigatório',
   email: 'O campo {field} deve ser um email válido',
-  min: 'O campo {field} deve ter pelo menos {parameter} caracteres'
+  min: 'O campo {field} deve ter pelo menos {min} caracteres'
 });
 
 // Validate with Portuguese messages
-const isValid = await validator.validate({ email: '' });
-console.log(validator.errors().first('email')); // "O campo email é obrigatório"
+validator.setData({ email: '' });
+const isValidPt = await validator.validate();
+console.log(validator.errors().first('email'));
 ```
 
 ## Next Steps

@@ -1,6 +1,6 @@
 # 🚀 Advanced Guide
 
-Advanced patterns, techniques, and best practices for the Universal Validator.
+Advanced patterns, techniques, and best practices for @vueller/validator.
 
 ## 📋 Table of Contents
 
@@ -20,9 +20,9 @@ Advanced patterns, techniques, and best practices for the Universal Validator.
 Scopes allow you to manage multiple forms independently on the same page.
 
 ```javascript
-import { createValidator } from '@vueller/validator';
+import { Validator } from '@vueller/validator';
 
-const validator = createValidator();
+const validator = new Validator();
 
 // Set global rules (shared across all scopes)
 validator.setMultipleRules({
@@ -233,8 +233,8 @@ function debounce(func, wait) {
 }
 
 // Debounced validation in forms
-const debouncedValidation = debounce(async (fieldName, value, scope) => {
-  await validator.validate(scope).field(fieldName, value);
+const debouncedValidation = debounce(async (fieldName, scope) => {
+  await validator.validateField(fieldName, scope);
   updateFieldUI(fieldName, scope);
 }, 500);
 
@@ -242,7 +242,7 @@ const debouncedValidation = debounce(async (fieldName, value, scope) => {
 document.addEventListener('input', e => {
   if (e.target.name) {
     const scope = e.target.dataset.scope || 'default';
-    debouncedValidation(e.target.name, e.target.value, scope);
+    debouncedValidation(e.target.name, scope);
   }
 });
 ```
@@ -299,7 +299,7 @@ validator.extend(
 // Apply rules based on form state
 class DynamicValidator {
   constructor() {
-    this.validator = createValidator();
+    this.validator = new Validator();
     this.currentRules = {};
   }
 
@@ -332,9 +332,8 @@ class DynamicValidator {
     return rules;
   }
 
-  async validate(scope, data) {
-    this.updateRules(data);
-    return await this.validator.validate(scope, data);
+  async validate(scope) {
+    return await this.validator.validate(scope);
   }
 }
 
@@ -350,7 +349,7 @@ await dynamicValidator.validate('registration', formData);
 ```javascript
 class CachedValidator {
   constructor() {
-    this.validator = createValidator();
+    this.validator = new Validator();
     this.cache = new Map();
     this.cacheTimeout = 5000; // 5 seconds
   }
@@ -395,7 +394,7 @@ class CachedValidator {
 // Validate multiple fields efficiently
 class BatchValidator {
   constructor() {
-    this.validator = createValidator();
+    this.validator = new Validator();
     this.pendingValidations = new Map();
   }
 
@@ -489,22 +488,22 @@ class ValidationErrorManager {
       .map(([field, count]) => ({ field, count }));
   }
 
-  async validateWithLogging(scope, data) {
+  async validateWithLogging(scope) {
     try {
-      const isValid = await this.validator.validate(scope, data);
+      const isValid = await this.validator.validate(scope);
 
       if (!isValid) {
         const errors = this.validator.errors().allByField();
         Object.entries(errors).forEach(([field, fieldErrors]) => {
           fieldErrors.forEach(error => {
-            this.logError(field, error, { scope, data });
+            this.logError(field, error, { scope });
           });
         });
       }
 
       return isValid;
     } catch (error) {
-      this.logError('system', error.message, { scope, data, stack: error.stack });
+      this.logError('system', error.message, { scope, stack: error.stack });
       throw error;
     }
   }
@@ -517,7 +516,7 @@ class ValidationErrorManager {
 // Fallback validation when main validator fails
 class FallbackValidator {
   constructor() {
-    this.primaryValidator = createValidator();
+    this.primaryValidator = new Validator();
     this.fallbackRules = new Map();
   }
 
@@ -525,10 +524,10 @@ class FallbackValidator {
     this.fallbackRules.set(field, validator);
   }
 
-  async validate(scope, data) {
+  async validate(scope) {
     try {
       // Try primary validation
-      return await this.primaryValidator.validate(scope, data);
+      return await this.primaryValidator.validate(scope);
     } catch (error) {
       console.warn('Primary validation failed, using fallback:', error);
 
@@ -572,7 +571,7 @@ fallbackValidator.setFallbackRule('password', value => {
 // Dynamic locale loading
 class I18nValidator {
   constructor() {
-    this.validator = createValidator();
+    this.validator = new Validator();
     this.loadedLocales = new Set(['en']);
   }
 
@@ -661,7 +660,7 @@ describe('Custom Validation Rules', () => {
   let validator;
 
   beforeEach(() => {
-    validator = createValidator();
+    validator = new Validator();
   });
 
   describe('evenNumber rule', () => {
@@ -721,7 +720,7 @@ describe('Form Validation Scenarios', () => {
   let validator;
 
   beforeEach(() => {
-    validator = createValidator();
+    validator = new Validator();
     validator.setMultipleRules({
       email: { required: true, email: true },
       password: { required: true, min: 8 },
@@ -767,7 +766,7 @@ describe('DOM Integration', () => {
   let form;
 
   beforeEach(() => {
-    validator = createValidator();
+    validator = new Validator();
 
     // Setup DOM
     document.body.innerHTML = `

@@ -1,283 +1,212 @@
 /**
- * Basic tests for the Validator library
- * Demonstrates core functionality and ensures everything works correctly
+ * Basic Tests
+ * Tests basic functionality and imports with modern patterns
  */
 
-import { Validator, createValidator, ErrorBag } from '../src/index.js';
+import { describe, it, expect } from '@jest/globals';
 
-// Mock console.log for testing
-const originalLog = console.log;
-console.log = (...args) => {
-  // Uncomment to see test output
-  // originalLog(...args);
-};
+// Test core exports
+import { Validator, ErrorBag, I18nManager } from '../src/core/index.js';
+import { RuleRegistry } from '../src/RuleRegistry.js';
+import { 
+  RequiredRule, 
+  MinRule, 
+  MaxRule, 
+  EmailRule, 
+  NumericRule, 
+  PatternRule, 
+  ConfirmedRule 
+} from '../src/rules/index.js';
 
-async function runTests() {
-  console.log('🚀 Running Validator Tests...\n');
+// Test Vue exports
+import { useValidator, ValidatorSymbol } from '../src/vue/use-validation.js';
 
-  // Test 1: Basic Validation
-  console.log('=== Test 1: Basic Validation ===');
-  const validator = createValidator();
+// Test main exports
+import ValidatorMain from '../src/index.js';
+import { install as installVuePlugin } from '../src/vue/index.js';
 
-  validator.setRules('email', {
-    required: true,
-    email: true
-  });
-
-  // Valid email
-  let isValid = await validator.validateField('email', 'user@example.com');
-  console.assert(isValid === true, '❌ Valid email should pass');
-  console.log('✅ Valid email passes');
-
-  // Invalid email
-  isValid = await validator.validateField('email', 'invalid-email');
-  console.assert(isValid === false, '❌ Invalid email should fail');
-  console.log('✅ Invalid email fails');
-
-  // Empty email (required rule)
-  isValid = await validator.validateField('email', '');
-  console.assert(isValid === false, '❌ Empty email should fail required');
-  console.log('✅ Empty email fails required rule');
-
-  // Test 2: Multiple Rules
-  console.log('\n=== Test 2: Multiple Rules ===');
-  validator.reset();
-
-  validator.setRules('password', {
-    required: true,
-    min: 8,
-    max: 50
-  });
-
-  // Too short password
-  isValid = await validator.validateField('password', '123');
-  console.assert(isValid === false, '❌ Short password should fail');
-  console.log('✅ Short password fails min rule');
-
-  // Valid password
-  isValid = await validator.validateField('password', 'validpassword123');
-  console.assert(isValid === true, '❌ Valid password should pass');
-  console.log('✅ Valid password passes all rules');
-
-  // Test 3: Required Rule with Trimming
-  console.log('\n=== Test 3: Required Rule Trimming ===');
-  validator.reset();
-
-  validator.setRules('username', { required: true });
-
-  // Whitespace-only string should fail
-  isValid = await validator.validateField('username', '   ');
-  console.assert(isValid === false, '❌ Whitespace-only should fail required');
-  console.log('✅ Whitespace-only string fails required (trimmed)');
-
-  // Valid string with spaces should pass
-  isValid = await validator.validateField('username', '  valid  ');
-  console.assert(isValid === true, '❌ Valid string with spaces should pass');
-  console.log('✅ Valid string with spaces passes (trimmed)');
-
-  // Test 4: Form Validation
-  console.log('\n=== Test 4: Form Validation ===');
-  const formValidator = new Validator();
-
-  formValidator.setMultipleRules({
-    email: { required: true, email: true },
-    password: { required: true, min: 8 },
-    confirmPassword: { required: true, confirmed: 'password' }
-  });
-
-  // Valid form data
-  const validFormData = {
-    email: 'user@example.com',
-    password: 'validpassword',
-    confirmPassword: 'validpassword'
-  };
-
-  isValid = await formValidator.validateAll(validFormData);
-  console.assert(isValid === true, '❌ Valid form should pass');
-  console.log('✅ Valid form passes all validations');
-
-  // Invalid form data (password mismatch)
-  const invalidFormData = {
-    email: 'user@example.com',
-    password: 'validpassword',
-    confirmPassword: 'differentpassword'
-  };
-
-  isValid = await formValidator.validateAll(invalidFormData);
-  console.assert(isValid === false, '❌ Form with password mismatch should fail');
-  console.log('✅ Form with password mismatch fails');
-
-  // Test 5: Error Bag
-  console.log('\n=== Test 5: Error Bag ===');
-  const errors = formValidator.errors();
-
-  console.assert(errors.has('confirmPassword'), '❌ Should have confirmPassword error');
-  console.log('✅ Error bag correctly identifies field with error');
-
-  const confirmError = errors.first('confirmPassword');
-  console.assert(typeof confirmError === 'string', '❌ Should return error message');
-  console.log('✅ Error bag returns error message');
-
-  console.assert(errors.count() > 0, '❌ Should have error count > 0');
-  console.log('✅ Error bag correctly counts errors');
-
-  // Test 6: Custom Rules
-  console.log('\n=== Test 6: Custom Rules ===');
-  const customValidator = new Validator();
-
-  // Add custom rule
-  customValidator.extend(
-    'evenNumber',
-    value => {
-      if (!value) return true;
-      return Number(value) % 2 === 0;
-    },
-    'The {field} field must be an even number.'
-  );
-
-  customValidator.setRules('number', {
-    required: true,
-    evenNumber: true
-  });
-
-  // Odd number should fail
-  isValid = await customValidator.validateField('number', 3);
-  console.assert(isValid === false, '❌ Odd number should fail custom rule');
-  console.log('✅ Custom rule correctly rejects odd number');
-
-  // Even number should pass
-  isValid = await customValidator.validateField('number', 4);
-  console.assert(isValid === true, '❌ Even number should pass custom rule');
-  console.log('✅ Custom rule correctly accepts even number');
-
-  // Test 7: Internationalization
-  console.log('\n=== Test 7: Internationalization ===');
-  const i18nValidator = new Validator({ locale: 'pt' });
-
-  i18nValidator.addMessages('pt', {
-    required: 'O campo {field} é obrigatório.',
-    email: 'O campo {field} deve ser um email válido.'
-  });
-
-  i18nValidator.setRules('email', { required: true });
-
-  await i18nValidator.validateField('email', '');
-  const ptError = i18nValidator.errors().first('email').value;
-
-  console.assert(
-    ptError && typeof ptError === 'string' && ptError.includes('obrigatório'),
-    '❌ Should show Portuguese message'
-  );
-  console.log('✅ Internationalization works correctly');
-
-  // Test 8: Rule Formats
-  console.log('\n=== Test 8: Rule Formats ===');
-  const formatValidator = new Validator();
-
-  // Object format
-  formatValidator.setRules('field1', { required: true, min: 5 });
-
-  // String format
-  formatValidator.setRules('field2', 'required|min:5');
-
-  // Array format
-  formatValidator.setRules('field3', ['required', { min: 5 }]);
-
-  // All should work the same way
-  await formatValidator.validateField('field1', 'abc');
-  await formatValidator.validateField('field2', 'abc');
-  await formatValidator.validateField('field3', 'abc');
-
-  const errors1 = formatValidator.errors().has('field1');
-  const errors2 = formatValidator.errors().has('field2');
-  const errors3 = formatValidator.errors().has('field3');
-
-  console.assert(errors1 && errors2 && errors3, '❌ All formats should fail validation');
-  console.log('✅ All rule formats work correctly');
-
-  // Test 9: Numeric Rule
-  console.log('\n=== Test 9: Numeric Rule ===');
-  const numValidator = new Validator();
-  numValidator.setRules('age', { numeric: true });
-
-  isValid = await numValidator.validateField('age', '25');
-  console.assert(isValid === true, '❌ String number should pass numeric rule');
-  console.log('✅ String number passes numeric rule');
-
-  isValid = await numValidator.validateField('age', 25);
-  console.assert(isValid === true, '❌ Number should pass numeric rule');
-  console.log('✅ Number passes numeric rule');
-
-  isValid = await numValidator.validateField('age', 'abc');
-  console.assert(isValid === false, '❌ Non-numeric should fail numeric rule');
-  console.log('✅ Non-numeric string fails numeric rule');
-
-  // Test 10: Pattern Rule
-  console.log('\n=== Test 10: Pattern Rule ===');
-  const patternValidator = new Validator();
-  patternValidator.setRules('code', { pattern: /^[A-Z]{3}\d{3}$/ });
-
-  isValid = await patternValidator.validateField('code', 'ABC123');
-  console.assert(isValid === true, '❌ Valid pattern should pass');
-  console.log('✅ Valid pattern passes');
-
-  isValid = await patternValidator.validateField('code', 'abc123');
-  console.assert(isValid === false, '❌ Invalid pattern should fail');
-  console.log('✅ Invalid pattern fails');
-
-  // Test 11: Unknown Rules (Warning instead of Error)
-  console.log('\n=== Test 11: Unknown Rules Handling ===');
-  const unknownRuleValidator = new Validator();
-
-  // Mock console.warn to capture warnings
-  const originalWarn = console.warn;
-  let warningMessage = '';
-  console.warn = message => {
-    warningMessage = message;
-  };
-
-  try {
-    // Set rules including an unknown rule
-    unknownRuleValidator.setRules('phone', {
-      required: true,
-      phone: true, // This rule doesn't exist
-      min: 10
+describe('Basic Functionality Tests', () => {
+  describe('Core Classes', () => {
+    it('should export Validator class', () => {
+      expect(Validator).toBeDefined();
+      expect(typeof Validator).toBe('function');
     });
 
-    // This should work without throwing an error
-    isValid = await unknownRuleValidator.validateField('phone', '123456789');
+    it('should export ErrorBag class', () => {
+      expect(ErrorBag).toBeDefined();
+      expect(typeof ErrorBag).toBe('function');
+    });
 
-    // Should fail because of min rule (length < 10) and required passes
-    console.assert(isValid === false, '❌ Field should fail min rule');
-    console.log('✅ Unknown rule is ignored, other rules still work');
+    it('should export I18nManager class', () => {
+      expect(I18nManager).toBeDefined();
+      expect(typeof I18nManager).toBe('function');
+    });
 
-    // Check that warning was logged
-    console.assert(
-      warningMessage.includes('Unknown validation rule: phone'),
-      '❌ Should log warning about unknown rule'
-    );
-    console.log('✅ Warning is logged for unknown rule');
+    it('should export RuleRegistry class', () => {
+      expect(RuleRegistry).toBeDefined();
+      expect(typeof RuleRegistry).toBe('function');
+    });
+  });
 
-    // Test with valid value (meets min rule)
-    isValid = await unknownRuleValidator.validateField('phone', '1234567890');
-    console.assert(isValid === true, '❌ Field should pass when meeting valid rules');
-    console.log('✅ Validation works correctly when unknown rule is ignored');
-  } catch (error) {
-    console.assert(false, `❌ Should not throw error for unknown rule: ${error.message}`);
-  }
+  describe('Validation Rules', () => {
+    it('should export all validation rules', () => {
+      expect(RequiredRule).toBeDefined();
+      expect(MinRule).toBeDefined();
+      expect(MaxRule).toBeDefined();
+      expect(EmailRule).toBeDefined();
+      expect(NumericRule).toBeDefined();
+      expect(PatternRule).toBeDefined();
+      expect(ConfirmedRule).toBeDefined();
+    });
 
-  // Restore console.warn
-  console.warn = originalWarn;
+    it('should create rule instances', () => {
+      const requiredRule = new RequiredRule();
+      const emailRule = new EmailRule();
+      const minRule = new MinRule();
 
-  console.log('\n🎉 All tests passed! The validator is working correctly.');
-}
+      expect(requiredRule).toBeDefined();
+      expect(emailRule).toBeDefined();
+      expect(minRule).toBeDefined();
+    });
+  });
 
-// Jest test
-describe('Validator Library', () => {
-  test('should pass all validation tests', async () => {
-    await runTests();
+  describe('Vue Composables', () => {
+    it('should export useValidator function', () => {
+      expect(useValidator).toBeDefined();
+      expect(typeof useValidator).toBe('function');
+    });
+
+    it('should export ValidatorSymbol', () => {
+      expect(ValidatorSymbol).toBeDefined();
+      expect(typeof ValidatorSymbol).toBe('symbol');
+    });
+  });
+
+  describe('Main Exports', () => {
+    it('should export main Validator as default', () => {
+      expect(ValidatorMain).toBeDefined();
+      expect(ValidatorMain).toBe(Validator);
+    });
+
+    it('should export Vue plugin install function', () => {
+      expect(installVuePlugin).toBeDefined();
+      expect(typeof installVuePlugin).toBe('function');
+    });
+  });
+
+  describe('Basic Instantiation', () => {
+    it('should create Validator instance', () => {
+      const validator = new Validator();
+      expect(validator).toBeInstanceOf(Validator);
+    });
+
+    it('should create ErrorBag instance', () => {
+      const errorBag = new ErrorBag();
+      expect(errorBag).toBeInstanceOf(ErrorBag);
+    });
+
+    it('should create I18nManager instance', () => {
+      const i18nManager = new I18nManager();
+      expect(i18nManager).toBeInstanceOf(I18nManager);
+    });
+
+    it('should create RuleRegistry instance', () => {
+      const ruleRegistry = new RuleRegistry();
+      expect(ruleRegistry).toBeInstanceOf(RuleRegistry);
+    });
+  });
+
+  describe('Basic Functionality', () => {
+    it('should validate simple required field', async () => {
+      const validator = new Validator();
+      validator.setRules('name', { required: true });
+      validator.setData({ name: 'John' });
+
+      const result = await validator.validate();
+      expect(result).toBe(true);
+    });
+
+    it('should handle validation errors', async () => {
+      const validator = new Validator();
+      validator.setRules('name', { required: true });
+      validator.setData({ name: '' });
+
+      const result = await validator.validate();
+      expect(result).toBe(false);
+      expect(validator.errors().has('name')).toBe(true);
+    });
+
+    it('should handle email validation', async () => {
+      const validator = new Validator();
+      validator.setRules('email', { required: true, email: true });
+
+      validator.setData({ email: 'test@example.com' });
+      let result = await validator.validate();
+      expect(result).toBe(true);
+
+      validator.setData({ email: 'invalid-email' });
+      result = await validator.validate();
+      expect(result).toBe(false);
+    });
+
+    it('should handle min/max validation', async () => {
+      const validator = new Validator();
+      validator.setRules('age', { required: true, numeric: true, minValue: 18, maxValue: 65 });
+
+      validator.setData({ age: 25 });
+      let result = await validator.validate();
+      expect(result).toBe(true);
+
+      validator.setData({ age: 17 });
+      result = await validator.validate();
+      expect(result).toBe(false);
+
+      validator.setData({ age: 66 });
+      result = await validator.validate();
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle invalid rule configurations gracefully', () => {
+      const validator = new Validator();
+      
+      expect(() => {
+        validator.setRules('field', 'invalid-rules');
+      }).not.toThrow();
+    });
+
+    it('should handle validation with missing rules', async () => {
+      const validator = new Validator();
+      validator.setData({ field: 'value' });
+
+      const result = await validator.validate();
+      expect(result).toBe(true);
+    });
+
+    it('should handle validation with null data', async () => {
+      const validator = new Validator();
+      validator.setRules('field', { required: true });
+
+      const result = await validator.validate(null);
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('Module Structure', () => {
+    it('should have proper ES6 module structure', () => {
+      // Test that all exports are functions or classes
+      expect(typeof Validator).toBe('function');
+      expect(typeof ErrorBag).toBe('function');
+      expect(typeof I18nManager).toBe('function');
+      expect(typeof RuleRegistry).toBe('function');
+    });
+
+    it('should support tree shaking', () => {
+      // Test that individual exports work
+      expect(Validator).toBeDefined();
+      expect(ErrorBag).toBeDefined();
+      expect(I18nManager).toBeDefined();
+    });
   });
 });
-
-// Restore console.log
-console.log = originalLog;

@@ -18,35 +18,55 @@ export function validateRequired(value) {
 }
 
 /**
- * Validate minimum length/value
+ * Validate minimum length (for strings, arrays, objects)
  * @param {any} value - Value to validate
- * @param {number} min - Minimum value/length
- * @returns {boolean} True if value meets minimum requirement
+ * @param {number} min - Minimum length
+ * @returns {boolean} True if value meets minimum length requirement
  */
 export function validateMin(value, min) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
-
-  if (isNumeric(value)) {
-    return parseFloat(value) >= min;
-  }
 
   return getLength(value) >= min;
 }
 
 /**
- * Validate maximum length/value
+ * Validate minimum numeric value
  * @param {any} value - Value to validate
- * @param {number} max - Maximum value/length
- * @returns {boolean} True if value meets maximum requirement
+ * @param {number} minValue - Minimum numeric value
+ * @returns {boolean} True if value meets minimum value requirement
+ */
+export function validateMinValue(value, minValue) {
+  if (isEmpty(value)) return true; // Let required rule handle empty values
+
+  if (!isNumeric(value)) return false;
+
+  return parseFloat(value) >= minValue;
+}
+
+/**
+ * Validate maximum length (for strings, arrays, objects)
+ * @param {any} value - Value to validate
+ * @param {number} max - Maximum length
+ * @returns {boolean} True if value meets maximum length requirement
  */
 export function validateMax(value, max) {
   if (isEmpty(value)) return true; // Let required rule handle empty values
 
-  if (isNumeric(value)) {
-    return parseFloat(value) <= max;
-  }
-
   return getLength(value) <= max;
+}
+
+/**
+ * Validate maximum numeric value
+ * @param {any} value - Value to validate
+ * @param {number} maxValue - Maximum numeric value
+ * @returns {boolean} True if value meets maximum value requirement
+ */
+export function validateMaxValue(value, maxValue) {
+  if (isEmpty(value)) return true; // Let required rule handle empty values
+
+  if (!isNumeric(value)) return false;
+
+  return parseFloat(value) <= maxValue;
 }
 
 /**

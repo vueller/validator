@@ -589,8 +589,8 @@ const errorsByField = errors.allByField();
 console.log('Errors by field:', errorsByField);
 
 // Count total errors
-const errorCount = errors.count();
-console.log('Total errors:', errorCount);
+const hasErrors = errors.any();
+console.log('Has errors:', hasErrors);
 
 // Get field names with errors
 const fieldsWithErrors = errors.keys();

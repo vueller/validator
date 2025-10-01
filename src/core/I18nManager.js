@@ -1,33 +1,46 @@
-import { locales } from '../locales/index.js';
-import { camelCaseToReadable, replacePlaceholders } from '../utils/index.js';
-
 /**
- * I18nManager for handling internationalization
- * Framework-agnostic implementation that works with both JavaScript and Vue
- * Supports real-time language switching and automatic UI updates
+ * I18nManager
+ *
+ * Minimal internationalization manager for validator messages. Stores messages
+ * per-locale and provides helpers to retrieve and format them with
+ * interpolation parameters.
  */
 export class I18nManager {
   constructor() {
-    // Internal state
-    this.state = {
-      locale: 'en',
-      fallbackLocale: 'en',
-      messages: { ...locales }
-    };
-
+    this.locale = 'en';
+    this.fallbackLocale = 'en';
+    this.messages = new Map(); // Map<locale, Map<key, message>>
     this.listeners = new Set();
+    
+    this.loadDefaultMessages();
+  }
+
+  /**
+   * Load default messages for supported locales
+   * @private
+   * @returns {void}
+   */
+  loadDefaultMessages() {
+    // Import and load all available translations
+    import('../locales/en.js').then(module => {
+      this.addMessages('en', module.default);
+    });
+
+    // Load Brazilian Portuguese translations
+    import('../locales/pt-BR.js').then(module => {
+      this.addMessages('pt-BR', module.default);
+    });
   }
 
   /**
    * Set the current locale
-   * @param {string} locale - The locale code (e.g., 'en', 'pt-BR', 'pt')
+   * @param {string} locale - The locale code (e.g., 'en', 'pt-BR')
+   * @returns {void}
    */
   setLocale(locale) {
-    if (this.hasLocale(locale)) {
-      this.state.locale = locale;
+    if (locale && typeof locale === 'string') {
+      this.locale = locale.toLowerCase();
       this.notifyListeners();
-    } else {
-      console.warn(`Locale '${locale}' not found. Available locales:`, this.getAvailableLocales());
     }
   }
 
@@ -36,116 +49,73 @@ export class I18nManager {
    * @returns {string} Current locale code
    */
   getLocale() {
-    return this.state.locale;
-  }
-
-  /**
-   * Set the fallback locale
-   * @param {string} locale - The fallback locale code
-   */
-  setFallbackLocale(locale) {
-    if (this.hasLocale(locale)) {
-      this.state.fallbackLocale = locale;
-      this.notifyListeners();
-    }
+    return this.locale;
   }
 
   /**
    * Add messages for a specific locale
    * @param {string} locale - The locale code
-   * @param {Object} messages - Object with message keys and values
+   * @param {Object<string, string>} messages - Object with message keys and templates
+   * @returns {void}
    */
   addMessages(locale, messages) {
-    if (!this.state.messages[locale]) {
-      this.state.messages[locale] = {};
+    if (!locale || !messages) return;
+
+    const normalizedLocale = locale.toLowerCase();
+    if (!this.messages.has(normalizedLocale)) {
+      this.messages.set(normalizedLocale, new Map());
     }
 
-    Object.assign(this.state.messages[locale], messages);
+    const localeMessages = this.messages.get(normalizedLocale);
+    for (const [key, message] of Object.entries(messages)) {
+      localeMessages.set(key, message);
+    }
+
     this.notifyListeners();
   }
 
   /**
-   * Set messages for a locale (replaces existing messages)
+   * Set messages for a locale (alias for addMessages for compatibility)
    * @param {string} locale - The locale code
-   * @param {Object} messages - The messages object
-   * @param {boolean} mergeWithDefaults - Whether to merge with default messages
+   * @param {Object<string, string>} messages - Object with message keys and templates
+   * @returns {void}
    */
-  setMessages(locale, messages, mergeWithDefaults = true) {
-    if (mergeWithDefaults && this.state.messages['en']) {
-      // Merge with English defaults
-      this.state.messages[locale] = {
-        ...this.state.messages['en'],
-        ...messages
-      };
-    } else {
-      // Replace completely
-      this.state.messages[locale] = { ...messages };
-    }
-
-    this.notifyListeners();
-  }
-
-  /**
-   * Load translation file with optional custom messages
-   * @param {Object} translations - Translation file object or custom messages object
-   * @param {Object} customMessages - Optional custom messages to override or extend
-   */
-  loadTranslations(translations, customMessages = {}) {
-    let messages = {};
-
-    // If translations is provided, use it as base
-    if (translations && typeof translations === 'object') {
-      messages = { ...translations };
-    }
-
-    // Add or override with custom messages
-    if (customMessages && typeof customMessages === 'object') {
-      Object.keys(customMessages).forEach(key => {
-        messages[key] = customMessages[key];
-      });
-    }
-
-    // Set the messages for current locale
-    this.state.messages[this.state.locale] = messages;
-    this.notifyListeners();
+  setMessages(locale, messages) {
+    return this.addMessages(locale, messages);
   }
 
   /**
    * Get current messages for active locale
-   * @returns {Object} Current locale messages
+   * @returns {Record<string, string>} Current locale messages as plain object
    */
   getCurrentMessages() {
-    return this.state.messages[this.state.locale] || this.state.messages[this.state.fallbackLocale];
+    const messages = this.messages.get(this.locale) || this.messages.get(this.fallbackLocale) || new Map();
+    return Object.fromEntries(messages);
   }
 
   /**
-   * Get a message for a specific rule and locale
+   * Get a message for a specific rule
+   * Resolution order: `field.rule` -> `rule` -> default fallback message
    * @param {string} rule - The rule name
    * @param {string} field - The field name
-   * @param {Object} params - Parameters to substitute in the message
-   * @param {string} locale - Optional locale override
+   * @param {Object<string, any>} [params] - Parameters to substitute in the message
+   * @param {string} [locale] - Optional locale override
    * @returns {string} The formatted message
    */
   getMessage(rule, field, params = {}, locale = null) {
-    const targetLocale = locale || this.state.locale;
-
-    // Try to get field-specific message first (field.rule format)
-    let message = this.getRawMessage(`${field}.${rule}`, targetLocale);
-
-    // If not found, try rule-only message (VeeValidate 3 style)
+    const targetLocale = locale ? locale.toLowerCase() : this.locale;
+    const localeMessages = this.messages.get(targetLocale) || this.messages.get(this.fallbackLocale) || new Map();
+    
+    // Try field-specific message first
+    let message = localeMessages.get(`${field}.${rule}`);
+    
+    // Fallback to rule-only message
     if (!message) {
-      message = this.getRawMessage(rule, targetLocale);
+      message = localeMessages.get(rule);
     }
 
-    // Fallback to default locale
+    // Final fallback
     if (!message) {
-      message =
-        this.getRawMessage(`${field}.${rule}`, this.state.fallbackLocale) ||
-        this.getRawMessage(rule, this.state.fallbackLocale);
-    }
-
-    if (!message) {
-      // Final fallback
       message = `The {field} field is invalid.`;
     }
 
@@ -153,41 +123,47 @@ export class I18nManager {
   }
 
   /**
-   * Get raw message without parameter substitution
-   * @param {string} rule - The rule name
-   * @param {string} locale - The locale code
-   * @returns {string|null} The raw message or null if not found
+   * Translate a message (alias for getMessage)
+   * @param {string} rule - Rule name
+   * @param {string} field - Field name
+   * @param {Object<string, any>} [params] - Parameters
+   * @param {string} [locale] - Optional locale override
+   * @returns {string} Formatted message
    */
-  getRawMessage(rule, locale) {
-    const localeMessages = this.state.messages[locale];
-    return localeMessages ? localeMessages[rule] : null;
+  t(rule, field, params = {}, locale = null) {
+    return this.getMessage(rule, field, params, locale);
   }
 
   /**
    * Format message with field name and parameters
    * @param {string} message - The message template
    * @param {string} field - The field name
-   * @param {Object} params - Parameters to substitute
+   * @param {Object<string, any>} [params] - Parameters to substitute
    * @returns {string} The formatted message
    */
   formatMessage(message, field, params = {}) {
     const formattedField = this.formatFieldName(field);
+    const replacements = { field: formattedField, ...params };
 
-    const replacements = {
-      field: formattedField,
-      ...params
-    };
-
-    return replacePlaceholders(message, replacements);
+    // Simple placeholder replacement
+    return message.replace(/\{(\w+)\}/g, (match, key) => {
+      return replacements[key] !== undefined ? replacements[key] : match;
+    });
   }
 
   /**
-   * Format field name for display (convert camelCase to readable format)
+   * Format field name for display
    * @param {string} field - The field name
    * @returns {string} Formatted field name
    */
   formatFieldName(field) {
-    return camelCaseToReadable(field);
+    if (!field) return '';
+    
+    // Convert camelCase to readable format
+    return field
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
   }
 
   /**
@@ -196,7 +172,7 @@ export class I18nManager {
    * @returns {boolean} True if locale exists
    */
   hasLocale(locale) {
-    return this.state.messages.hasOwnProperty(locale);
+    return this.messages.has(locale?.toLowerCase());
   }
 
   /**
@@ -204,34 +180,29 @@ export class I18nManager {
    * @returns {string[]} Array of locale codes
    */
   getAvailableLocales() {
-    return Object.keys(this.state.messages);
+    // Return locales in original format (preserving case)
+    const locales = Array.from(this.messages.keys());
+    return locales.map(locale => {
+      // Convert back to original case if possible
+      if (locale === 'pt-br') return 'pt-BR';
+      if (locale === 'en') return 'en';
+      return locale;
+    });
   }
 
   /**
-   * Remove a locale
-   * @param {string} locale - The locale code to remove
-   */
-  removeLocale(locale) {
-    if (locale !== this.state.fallbackLocale) {
-      delete this.state.messages[locale];
-      this.notifyListeners();
-    }
-  }
-
-  /**
-   * Clear all messages except fallback
+   * Clear all messages and reload defaults
+   * @returns {void}
    */
   clear() {
-    const fallbackMessages = this.state.messages[this.state.fallbackLocale];
-    this.state.messages = {
-      [this.state.fallbackLocale]: fallbackMessages
-    };
+    this.messages.clear();
+    this.loadDefaultMessages();
     this.notifyListeners();
   }
 
   /**
-   * Subscribe to changes (for reactive frameworks)
-   * @param {Function} listener - Callback function
+   * Subscribe to changes
+   * @param {Function} listener - Change listener
    * @returns {Function} Unsubscribe function
    */
   subscribe(listener) {
@@ -240,60 +211,32 @@ export class I18nManager {
   }
 
   /**
-   * Notify all listeners of changes
+   * Notify all listeners
    * @private
+   * @returns {void}
    */
   notifyListeners() {
-    for (const listener of this.listeners) {
-      listener();
-    }
+    this.listeners.forEach(listener => listener());
   }
 
   /**
-   * Get state for Vue components (creates reactive wrappers)
-   * @returns {Object} Reactive state object
+   * Get state for reactive frameworks
+   * @returns {Object} State object
    */
   getState() {
-    // Check if Vue is available
-    if (typeof window !== 'undefined' && window.Vue) {
-      const { computed } = window.Vue;
-      return this.createVueState(computed);
-    }
-
-    // Try to import Vue dynamically
-    try {
-      const { computed } = require('vue');
-      return this.createVueState(computed);
-    } catch {
-      // Fallback to plain object for non-Vue environments
-      return this.createPlainState();
-    }
-  }
-
-  /**
-   * Create Vue reactive state
-   * @param {Function} computed - Vue computed function
-   * @returns {Object} Vue reactive state
-   */
-  createVueState(computed) {
     return {
-      locale: computed(() => this.state.locale),
-      availableLocales: computed(() => this.getAvailableLocales()),
-      setLocale: this.setLocale.bind(this),
-      addMessages: this.addMessages.bind(this)
-    };
-  }
-
-  /**
-   * Create plain JavaScript state
-   * @returns {Object} Plain state object
-   */
-  createPlainState() {
-    return {
-      locale: this.state.locale,
+      locale: this.locale,
       availableLocales: this.getAvailableLocales(),
+      hasLocale: this.hasLocale.bind(this),
+      
+      // Methods
       setLocale: this.setLocale.bind(this),
-      addMessages: this.addMessages.bind(this)
+      getLocale: this.getLocale.bind(this),
+      addMessages: this.addMessages.bind(this),
+      getMessage: this.getMessage.bind(this),
+      t: this.t.bind(this),
+      clear: this.clear.bind(this)
     };
   }
 }
+

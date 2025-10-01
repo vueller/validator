@@ -1,34 +1,40 @@
-import { isEmpty, isString } from '../utils/index.js';
-
 /**
- * ErrorBag class for storing and manipulating validation errors
- * Framework-agnostic implementation that works with both JavaScript and Vue
- * Provides reactive-like behavior without Vue dependency
+ * ErrorBag
+ *
+ * Stores validation errors per field and provides helpers to query them.
+ * Notifies subscribers on changes so UI layers can reactively update.
+ *
+ * Error shape: `{ message: string, rule: string }`.
  */
 export class ErrorBag {
   constructor() {
-    // Internal state for errors
-    this.errors = new Map();
+    this.errors = new Map(); // Map<field, Array<Error>>
     this.listeners = new Set();
-    // Flag to track if manual error display is being used
-    this.usingManualErrors = false;
   }
 
   /**
    * Add an error for a specific field
    * @param {string} field - The field name
    * @param {string} message - The error message
+   * @param {string} [ruleName='validation'] - The rule name that caused the error
    */
-  add(field, message) {
-    if (!isString(field) || isEmpty(message)) {
-      return; // Ignore invalid inputs
-    }
+  add(field, message, ruleName = 'validation') {
+    if (!field || !message) return;
 
     if (!this.errors.has(field)) {
       this.errors.set(field, []);
     }
     
-    this.errors.get(field).push(message);
+    const fieldErrors = this.errors.get(field);
+    
+    // If it's a required error, add at the beginning (highest priority)
+    if (ruleName === 'required') {
+      fieldErrors.unshift({ message, rule: ruleName });
+    } else {
+      // Add other errors at the end
+      fieldErrors.push({ message, rule: ruleName });
+    }
+    
     this.notifyListeners();
   }
 
@@ -37,10 +43,8 @@ export class ErrorBag {
    * @param {string} field - The field name
    */
   remove(field) {
-    if (!isString(field)) {
-      return; // Ignore invalid inputs
-    }
-
+    if (!field) return;
+    
     this.errors.delete(field);
     this.notifyListeners();
   }
@@ -48,21 +52,20 @@ export class ErrorBag {
   /**
    * Get all errors for a specific field
    * @param {string} field - The field name
-   * @returns {string[]} Array of error messages
+   * @returns {Array<{message: string, rule: string}>} Array of error objects
    */
   get(field) {
     return this.errors.get(field) || [];
   }
 
   /**
-   * Get the first error for a specific field
+   * Get the first error message for a specific field
    * @param {string} field - The field name
    * @returns {string|null} First error message or null
    */
   first(field) {
-    this.usingManualErrors = true; // Mark that manual error display is being used
-    const fieldErrors = this.errors.get(field) || [];
-    return fieldErrors.length > 0 ? fieldErrors[0] : null;
+    const fieldErrors = this.get(field);
+    return fieldErrors.length > 0 ? fieldErrors[0].message : null;
   }
 
   /**
@@ -75,26 +78,14 @@ export class ErrorBag {
   }
 
   /**
-   * Get all errors as a flat array
-   * @returns {string[]} Array of all error messages
-   */
-  all() {
-    const allErrors = [];
-    for (const fieldErrors of this.errors.values()) {
-      allErrors.push(...fieldErrors);
-    }
-    return allErrors;
-  }
-
-  /**
    * Get all errors grouped by field
-   * @returns {Object} Object with field names as keys and error arrays as values
+   * @returns {Record<string, string[]>} Map of field -> error messages
    */
   allByField() {
     const result = {};
     for (const [field, fieldErrors] of this.errors.entries()) {
       if (fieldErrors.length > 0) {
-        result[field] = [...fieldErrors];
+        result[field] = fieldErrors.map(error => error.message);
       }
     }
     return result;
@@ -116,17 +107,6 @@ export class ErrorBag {
     return this.errors.size > 0;
   }
 
-  /**
-   * Get the total count of errors
-   * @returns {number} Total number of errors
-   */
-  count() {
-    let total = 0;
-    for (const fieldErrors of this.errors.values()) {
-      total += fieldErrors.length;
-    }
-    return total;
-  }
 
   /**
    * Get all field names that have errors
@@ -136,14 +116,6 @@ export class ErrorBag {
     return Array.from(this.errors.keys()).filter(field => 
       this.errors.get(field).length > 0
     );
-  }
-
-  /**
-   * Check if manual error display is being used
-   * @returns {boolean} True if manual error display is being used
-   */
-  isUsingManualErrors() {
-    return this.usingManualErrors;
   }
 
   /**
@@ -167,62 +139,24 @@ export class ErrorBag {
   }
 
   /**
-   * Get state for Vue components (creates reactive wrappers)
-   * @returns {Object} Object with reactive computed properties
+   * Get state for reactive frameworks
+   * @returns {Object} State object
    */
   getState() {
-    // Check if Vue is available
-    if (typeof window !== 'undefined' && window.Vue) {
-      const { computed } = window.Vue;
-      return this.createVueState(computed);
-    }
-
-    // Try to import Vue dynamically
-    try {
-      const { computed } = require('vue');
-      return this.createVueState(computed);
-    } catch {
-      // Fallback to plain object for non-Vue environments
-      return this.createPlainState();
-    }
-  }
-
-  /**
-   * Create Vue reactive state
-   * @param {Function} computed - Vue computed function
-   * @returns {Object} Vue reactive state
-   */
-  createVueState(computed) {
-    return {
-      errors: computed(() => this.allByField()),
-      
-      // Direct methods - will be reactive through computed
-      has: this.has.bind(this),
-      first: this.first.bind(this),
-      get: this.get.bind(this),
-      any: computed(() => this.any()),
-      count: computed(() => this.count()),
-      keys: computed(() => this.keys()),
-      clear: this.clear.bind(this)
-    };
-  }
-
-  /**
-   * Create plain JavaScript state
-   * @returns {Object} Plain state object
-   */
-  createPlainState() {
     return {
       errors: this.allByField(),
+      hasErrors: this.any(),
+      fieldsWithErrors: this.keys(),
       
-      // Direct methods
+      // Methods
       has: this.has.bind(this),
       first: this.first.bind(this),
       get: this.get.bind(this),
       any: this.any.bind(this),
-      count: this.count.bind(this),
       keys: this.keys.bind(this),
-      clear: this.clear.bind(this)
+      clear: this.clear.bind(this),
+      add: this.add.bind(this),
+      remove: this.remove.bind(this)
     };
   }
 }

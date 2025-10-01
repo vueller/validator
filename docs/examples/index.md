@@ -1,6 +1,6 @@
 # Examples
 
-Explore practical examples of Universal Validator in action. These examples demonstrate real-world usage patterns and best practices.
+Explore practical examples of @vueller/validator in action. These examples demonstrate real-world usage patterns and best practices.
 
 ## 📋 Available Examples
 
@@ -23,7 +23,7 @@ Vue.js specific examples using the Composition API:
 ## 🎯 Example Categories
 
 ### Beginner Examples
-Perfect for getting started with Universal Validator:
+Perfect for getting started with @vueller/validator:
 - Simple form validation
 - Basic error handling
 - Real-time validation setup
@@ -47,7 +47,7 @@ For complex applications and advanced use cases:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Universal Validator Example</title>
+    <title>@vueller/validator Example</title>
 </head>
 <body>
     <form id="myForm">
@@ -130,7 +130,7 @@ Many patterns shown in framework-specific examples can be adapted to other frame
 
 ## 🔗 Related Resources
 
-- [**Installation Guide**](../guide/installation.md) - Set up Universal Validator
+- [**Installation Guide**](../guide/installation.md) - Set up @vueller/validator
 - [**API Reference**](../api/core.md) - Complete API documentation
 - [**Advanced Guide**](../guide/advanced.md) - Advanced patterns and techniques
 

@@ -1,103 +1,32 @@
 /**
- * Vue 3 extension for the Validator library
- * Provides directives and composables for seamless form validation
+ * Vue 3 Integration - Simplified validation for Vue
+ * Clean, intuitive API for Vue 3 applications
  */
 
-import { Validator } from '../core/index.js';
-import ValidatorForm from './ValidatorForm.vue';
-import { ValidatorSymbol, useValidator } from './composables.js';
-import { rulesDirective, validateDirective, setGlobalValidator } from './directives.js';
-import { validator as universalValidator, setGlobalValidator as setUniversalValidator } from '../universal-validator.js';
+// Core exports
+export { Validator } from '../core/validator.js';
+export { ErrorBag } from '../core/ErrorBag.js';
+export { I18nManager } from '../core/I18nManager.js';
 
-/**
- * Plugin installation function
- * @param {Object} app - Vue app instance
- * @param {Object} options - Plugin options
- * @param {boolean} options.globalValidator - Create global validator instance
- * @param {boolean} options.globalProperties - Add $validator to global properties
- * @param {boolean} options.validateOnBlur - Enable blur validation globally (default: true)
- * @param {boolean} options.validateOnInput - Enable input validation globally (default: false)
- * @param {string} options.locale - Default locale
- */
-export function install(app, options = {}) {
-  // Default options
-  const config = {
-    validateOnBlur: true,
-    validateOnInput: false,
-    locale: 'en',
-    ...options
-  };
+// Vue composables
+export { useValidation, useValidationFromParent, useFieldValidation } from './use-validation.js';
 
-  // Register directives
-  app.directive('rules', rulesDirective);
-  app.directive('validate', validateDirective);
+// Vue components
+export { default as ValidationForm } from './ValidationForm.vue';
 
-  // Register components
-  app.component('ValidatorForm', ValidatorForm);
+// Vue directives
+export { registerDirectives } from './directives.js';
+export { rulesDirective, validateDirective, errorDirective, labelDirective } from './directives.js';
 
-  // Provide global validator if requested
-  if (config.globalValidator) {
-    const globalValidator = createGlobalValidator(config);
-    
-    app.provide(ValidatorSymbol, globalValidator);
-    setGlobalValidator(globalValidator);
-    setUniversalValidator(globalValidator);
-    
-    // Make config available globally
-    app.config.globalProperties.$validatorConfig = config;
-  }
+// Vue plugin
+export { createValidationPlugin, getGlobalValidator, setGlobalLocale, getGlobalLocale } from './plugin.js';
 
-  // Add global properties if requested
-  if (config.globalProperties) {
-    addGlobalProperties(app, config);
-  }
+// Default plugin
+export { default as ValidationPlugin } from './plugin.js';
 
-  // Store config for directive access
-  app._validatorConfig = config;
-}
+// Export install function for plugin usage
+import ValidationPlugin from './plugin.js';
+export const install = ValidationPlugin.install.bind(ValidationPlugin);
 
-/**
- * Create global validator instance with configuration
- * @param {Object} config - Configuration options
- * @returns {Validator} Configured validator instance
- */
-function createGlobalValidator(config) {
-  const globalValidator = new Validator(config);
-  
-  // Add global configuration methods
-  globalValidator.getGlobalConfig = () => config;
-  globalValidator.setGlobalConfig = (newConfig) => {
-    Object.assign(config, newConfig);
-  };
-  
-  return globalValidator;
-}
-
-/**
- * Add global properties to Vue app
- * @param {Object} app - Vue app instance
- * @param {Object} config - Configuration options
- */
-function addGlobalProperties(app, config) {
-  app.config.globalProperties.$validator = useValidator;
-  app.config.globalProperties.$validatorConfig = config;
-  app.config.globalProperties.$validate = universalValidator;
-  app.config.globalProperties.$validatorUniversal = universalValidator;
-}
-
-// Export components and composables
-export { 
-  ValidatorForm, 
-  useValidator, 
-  ValidatorSymbol, 
-  universalValidator 
-};
-
-// Export directives
-export { rulesDirective, validateDirective };
-
-// Default export for plugin installation
-export default {
-  install,
-  ValidatorForm
-};
+// Default export for plugin usage
+export default ValidationPlugin;

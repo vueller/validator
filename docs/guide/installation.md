@@ -25,48 +25,354 @@ yarn add @vueller/validator
 ### JavaScript/TypeScript
 
 ```javascript
-import { createValidator } from '@vueller/validator';
+import { Validator } from '@vueller/validator'
 
-// Create validator instance
-const validator = createValidator({
-  locale: 'en',
-  validateOnBlur: true,
-  validateOnInput: false
-});
+const validator = new Validator({ locale: 'en' })
+validator.setRules('email', { required: true, email: true })
+validator.setRules('password', { required: true, min: 8 })
+validator.setData({ email: '', password: '' })
+await validator.validate()
 ```
 
-### Vue.js Plugin
+### Vue 3 Plugin
 
-```javascript
-import { createApp } from 'vue';
-import ValidatorPlugin from '@vueller/validator/vue';
-import App from './App.vue';
+```ts
+import { createApp } from 'vue'
+import ValidationPlugin from '@vueller/validator/vue'
+import App from './App.vue'
 
-const app = createApp(App);
-
-// Install plugin with global configuration
-app.use(ValidatorPlugin, {
-  globalValidator: true,
-  globalProperties: true,
-  locale: 'en',
-  validateOnBlur: true,
-  validateOnInput: false
-});
-
-app.mount('#app');
+const app = createApp(App)
+app.use(ValidationPlugin)
+app.mount('#app')
 ```
 
-### Vue.js Composable (Recommended)
+### Vue 3 with ValidationForm
 
 ```vue
 <script setup>
-import { useValidator } from '@vueller/validator/vue';
+import { ref } from 'vue'
+import { ValidationForm } from '@vueller/validator/vue'
 
-const { validator, validate, errors, isValid } = useValidator({
-  locale: 'en',
-  validateOnBlur: true
-});
+const rules = ref({ email: { required: true, email: true } })
 </script>
+
+<template>
+  <ValidationForm v-slot="{ errors }" :rules="rules">
+    <input id="email" name="email" v-label="'E-mail'" />
+    <div v-if="errors.has('email')">{{ errors.first('email') }}</div>
+    <button type="submit">Submit</button>
+  </ValidationForm>
+  
+  <button @click="setGlobalLocale('pt-BR')">pt-BR</button>
+  <button @click="setGlobalLocale('en')">en</button>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+```
 ```
 
 ## Configuration Options

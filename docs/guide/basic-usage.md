@@ -88,7 +88,7 @@ const firstEmailError = validator.errors().first('email');
 const hasEmailError = validator.errors().has('email');
 
 // Count total errors
-const errorCount = validator.errors().count();
+const hasErrors = validator.hasErrors();
 ```
 
 ### Error Messages
@@ -158,7 +158,7 @@ validator.setRules('email', { required: true, email: true });
   <div>
     <p>Form is valid: {{ isValid }}</p>
     <p>Has errors: {{ hasErrors }}</p>
-    <p>Error count: {{ errors.count() }}</p>
+    <p>Has errors: {{ errors.any() }}</p>
 
     <div v-if="errors.has('email')">Email error: {{ errors.first('email') }}</div>
   </div>
@@ -580,3 +580,71 @@ textarea {
 - [JavaScript Examples](../examples/javascript.md) - More JavaScript examples
 - [Vue Examples](../examples/vue.md) - More Vue.js examples
 - [API Reference](../api/core.md) - Complete API documentation
+
+---
+
+## Updated API (current)
+
+### Core (JavaScript)
+
+```js
+import { Validator } from '@vueller/validator'
+
+const validator = new Validator({ locale: 'en' })
+validator.setRules('email', { required: true, email: true })
+validator.setData({ email: 'user@example.com' })
+const ok = await validator.validate()
+if (!ok) console.log(validator.errors().first('email'))
+```
+
+### Vue 3 (ValidationForm + v-label)
+
+```vue
+<template>
+  <ValidationForm v-slot="{ errors }" :rules="rules" @submit="onSubmit">
+    <input id="email" name="email" v-label="'E-mail'" />
+    <div v-if="errors.has('email')">{{ errors.first('email') }}</div>
+    <button type="submit">Submit</button>
+  </ValidationForm>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { ValidationForm } from '@vueller/validator/vue'
+
+const rules = ref({ email: { required: true, email: true } })
+const onSubmit = ({ data, isValid }) => { if (isValid) {/* ... */} }
+</script>
+```
+
+### Custom Rules (callback or class) and Messages
+
+```js
+const v = new Validator()
+
+// Callback rule
+v.extend('evenNumber', (value) => {
+  if (value === '' || value == null) return true
+  return Number(value) % 2 === 0
+}, 'The {field} must be an even number')
+
+// Class rule
+class StrongPasswordRule {
+  validate(value) {
+    if (value === '' || value == null) return true
+    const hasUpper = /[A-Z]/.test(value)
+    const hasLower = /[a-z]/.test(value)
+    const hasNumber = /\d/.test(value)
+    const hasSpecial = /[!@#$%^&*]/.test(value)
+    return hasUpper && hasLower && hasNumber && hasSpecial && value.length >= 8
+  }
+  getRuleName() { return 'strongPassword' }
+}
+v.extend('strongPassword', StrongPasswordRule, 'Password must contain uppercase, lowercase, number, and special character')
+
+// Messages and new languages
+v.addMessages('en', { phone: 'The {field} field must be a valid phone number.' })
+v.addMessages('pt-BR', { phone: 'O campo {field} deve ser um telefone válido.' })
+// Optional field-specific override
+v.addMessages('pt-BR', { 'contact.phone': 'Telefone inválido para contato.' })
+```

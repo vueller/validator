@@ -2,17 +2,32 @@ import {
   RequiredRule,
   MinRule,
   MaxRule,
+  MinValueRule,
+  MaxValueRule,
   EmailRule,
   NumericRule,
   PatternRule,
-  ConfirmedRule
+  ConfirmedRule,
+  AlphaRule,
+  BetweenRule,
+  DecimalRule,
+  DigitsRule,
+  IntegerRule,
+  UrlRule
 } from './rules/index.js';
-import { isObject, isArray, isString, isNumber } from './utils/index.js';
+import { isObject, isArray, isString } from './utils/index.js';
 
 /**
- * RuleRegistry class for managing validation rules
- * Provides a centralized way to register, create, and manage validation rules
- * Refactored to use utilities and follow clean code principles
+ * RuleRegistry
+ *
+ * Central registry responsible for managing built-in and custom rules.
+ * Converts user-provided rule formats into instantiated rule objects and
+ * exposes helpers to parse rules in object, array or string formats.
+ *
+ * Public behavior:
+ * - Built-in rules are registered at construction
+ * - Custom rules can be registered via {@link register}
+ * - {@link create} returns an instantiated rule or null if unknown
  */
 export class RuleRegistry {
   constructor() {
@@ -31,10 +46,18 @@ export class RuleRegistry {
       required: RequiredRule,
       min: MinRule,
       max: MaxRule,
+      minValue: MinValueRule,
+      maxValue: MaxValueRule,
       email: EmailRule,
       numeric: NumericRule,
       pattern: PatternRule,
-      confirmed: ConfirmedRule
+      confirmed: ConfirmedRule,
+      alpha: AlphaRule,
+      between: BetweenRule,
+      decimal: DecimalRule,
+      digits: DigitsRule,
+      integer: IntegerRule,
+      url: UrlRule
     };
 
     for (const [name, RuleClass] of Object.entries(rules)) {
@@ -57,8 +80,8 @@ export class RuleRegistry {
         getRuleName: () => name
       });
     } else {
-      // It's a rule class
-      this.builtInRules.set(name, rule);
+      // It's a rule class - add to customRules
+      this.customRules.set(name, rule);
     }
   }
 
@@ -87,14 +110,20 @@ export class RuleRegistry {
     // Check custom rules
     if (this.customRules.has(name)) {
       const customRule = this.customRules.get(name);
+      
+      // If it's a class (has prototype.validate), instantiate it
+      if (typeof customRule === 'function' && customRule.prototype?.validate) {
+        return this.createBuiltInRule(customRule, params);
+      }
+      
+      // Otherwise it's a validation function wrapped as object
       return {
         ...customRule,
         params: params
       };
     }
 
-    // Log warning for unknown rules instead of throwing error
-    console.warn(`Unknown validation rule: ${name}. This rule will be ignored.`);
+    // Unknown rule: return null for caller to ignore gracefully
     return null;
   }
 
