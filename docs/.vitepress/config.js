@@ -15,8 +15,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/' },
-      { text: 'Examples', link: '/examples/' },
-      { text: 'GitHub', link: 'https://github.com/vueller/validator' }
+      { text: 'Examples', link: '/examples/' }
     ],
 
     sidebar: {
