@@ -2,6 +2,15 @@
 
 A modern, framework-agnostic validation library with reactive support for JavaScript and Vue.js applications.
 
+## 🆕 Latest Updates (v2.0.2)
+
+- ✅ **Optimized Package Size**: Reduced from 333kB to 47.3kB (85% smaller!)
+- ✅ **GitHub Packages**: Now available on GitHub Packages registry
+- ✅ **Source-Free Distribution**: Package ships only compiled `dist/` files
+- ✅ **Enhanced Locales**: Built locales now included in distribution
+- ✅ **Dual Registry**: Available on both npmjs.org and GitHub Packages
+- ✅ **Improved Build**: Rollup configuration optimized for production
+
 ## ✨ Features
 
 - 🌐 **Universal**: Works with vanilla JavaScript, Vue.js, and any framework
@@ -16,9 +25,17 @@ A modern, framework-agnostic validation library with reactive support for JavaSc
 
 ### Installation
 
+**From npmjs.org (recommended):**
 ```bash
 npm install @vueller/validator
 ```
+
+**From GitHub Packages:**
+```bash
+npm install @vueller/validator --registry=https://npm.pkg.github.com
+```
+
+**Package Size:** Only 47.3kB (85% smaller than previous versions!)
 
 ### JavaScript Example
 
@@ -180,11 +197,19 @@ validator.extend('evenNumber', (value) => {
 
 ```
 @vueller/validator/
-├── core          # Core validation engine
-├── vue           # Vue.js components and composables  
-├── universal     # Universal API for any framework
-└── locales       # Internationalization files
+├── dist/         # Compiled production files (47.3kB)
+│   ├── validator.esm.js      # ES modules build
+│   ├── validator.cjs.js      # CommonJS build
+│   ├── validator-vue.esm.js  # Vue.js components
+│   └── locales.esm.js        # Built locales
+├── README.md     # Documentation
+└── LICENSE       # MIT License
 ```
+
+## 🌐 Available Registries
+
+- **npmjs.org**: [@vueller/validator](https://www.npmjs.com/package/@vueller/validator)
+- **GitHub Packages**: [vueller/validator/packages](https://github.com/vueller/validator/packages)
 
 ## 🤝 Contributing
 
