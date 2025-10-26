@@ -264,6 +264,21 @@ const clear = () => {
   reset();
 };
 
+// Expose methods for parent component to access via template ref
+defineExpose({
+  validate,
+  reset,
+  clear,
+  setValue,
+  getValue,
+  setRules,
+  formValues,
+  errors,
+  isValid,
+  hasErrors,
+  isValidating
+});
+
 // Auto-bind form fields
 const bindFormFields = () => {
   if (!formElement.value) return;
