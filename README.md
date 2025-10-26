@@ -2,7 +2,7 @@
 
 A modern validation library with global instance management, Vue 3 integration, custom rules, and i18n support.
 
-## 🆕 What's New in v2.0
+## 🆕 What's New in v2.1
 
 - ✨ **Global Validator Instance**: Single validator shared across the entire application
 - ✨ **Simplified Vue Plugin**: Easy setup with `app.use(validator, options)`
