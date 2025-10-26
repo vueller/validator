@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/installation
+      link: /guide/getting-started
     - theme: alt
       text: View on GitHub
       link: https://github.com/vueller/validator
@@ -22,16 +22,16 @@ features:
     details: Works with vanilla JavaScript and integrates deeply with Vue 3
   - icon: ⚡
     title: Reactive
-    details: Real-time validation with automatic UI updates
+    details: Real-time validation with automatic UI updates and optimized performance
   - icon: 🎯
-    title: Scope-based
-    details: Multiple forms in the same page with isolated validation
+    title: Global Instance
+    details: Single validator instance shared across the entire application
   - icon: 🧩
-    title: Modular
-    details: Clean architecture with extensible rules system
+    title: Custom Rules
+    details: Easy custom rule creation with fallback message system
   - icon: 🌍
     title: i18n Ready
-    details: Built-in internationalization with customizable messages and locale support
+    details: Built-in internationalization with hierarchical message resolution
   - icon: 🎨
     title: Framework Agnostic
     details: No dependencies on specific frameworks
@@ -54,24 +54,30 @@ const isValid = await validator.validate();
 
 ```vue [Vue 3]
 <template>
-  <ValidationForm v-slot="{ values, errors }" :rules="rules" @submit="onSubmit">
-    <input id="email" name="email" v-label="'E-mail'" />
-    <div v-if="errors.has('email')">{{ errors.first('email') }}</div>
+  <div>
+    <!-- Global language switcher -->
+    <button @click="changeLanguage('pt-BR')">Português</button>
+    <button @click="changeLanguage('en')">English</button>
     
-    <input id="password" name="password" type="password" v-label="'Password'" />
-    <div v-if="errors.has('password')">{{ errors.first('password') }}</div>
-    
-    <button type="submit">Submit</button>
-  </ValidationForm>
-  
-  <button @click="setLang('pt-BR')">pt-BR</button>
-  <button @click="setLang('en')">en</button>
-  
+    <!-- Validation Form -->
+    <ValidationForm v-slot="{ values, errors, isValid }" :rules="rules" @submit="onSubmit">
+      <input name="email" v-label="'E-mail'" v-rules="{ required: true, email: true }" />
+      <div v-if="errors.has('email')">{{ errors.first('email') }}</div>
+      
+      <input name="password" type="password" v-label="'Password'" v-rules="{ required: true, min: 8 }" />
+      <div v-if="errors.has('password')">{{ errors.first('password') }}</div>
+      
+      <button type="submit" :disabled="!isValid">Submit</button>
+    </ValidationForm>
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { ValidationForm, setGlobalLocale } from '@vueller/validator/vue'
+import { ValidationForm, useValidator } from '@vueller/validator/vue'
+
+// Access global validator
+const { setLocale } = useValidator();
 
 const rules = ref({
   email: { required: true, email: true },
@@ -80,23 +86,38 @@ const rules = ref({
 
 const onSubmit = ({ data, isValid }) => {
   if (isValid) {
-    // handle success
+    console.log('Form submitted:', data);
   }
 }
 
-const setLang = (code) => setGlobalLocale(code)
+const changeLanguage = (locale) => {
+  setLocale(locale);
+}
 </script>
 ```
 
 :::
+
+## What's New in v2.0
+
+### ✨ **Major Updates**
+- **Global Validator Instance**: Single validator shared across the entire application
+- **Simplified Vue Plugin**: Easy setup with `app.use(validator, options)`
+- **Enhanced Composables**: Modern Vue 3 Composition API integration
+- **Automatic Validation**: No need for `v-validate` directive on custom rules
+- **Improved Reactivity**: Better performance with optimized update cycles
+- **Custom Rule Messages**: Fallback message system with locale-specific overrides
+
+### 🚀 **Getting Started**
+Ready to start validating? Head over to the [Getting Started Guide](/guide/getting-started) to begin your validation journey!
 
 ## Why @vueller/validator?
 
 ### 🚀 **Modern Architecture**
 Built with modern JavaScript patterns, supporting both synchronous and asynchronous validation with a clean, intuitive API.
 
-### 🎯 **Scope Management**
-Handle multiple forms on the same page with isolated validation states, perfect for complex applications.
+### 🎯 **Global Instance Management**
+Handle validation across your entire application with a single, shared validator instance.
 
 ### ⚡ **Performance Focused**
 Optimized for performance with smart caching, debouncing, and minimal re-renders.

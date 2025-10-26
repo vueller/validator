@@ -51,9 +51,18 @@ export class Validator {
     this.validationEngine = new ValidationEngine(this.options);
     this.formManager = new FormManager();
     this.ruleManager = new RuleManager(this.ruleRegistry);
+    
+    // Listeners for reactive updates
+    this.listeners = new Set();
+    this.isInitializing = true;
 
     // Initialize
     this.initialize();
+    
+    // Mark initialization as complete after a short delay
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 100);
   }
 
   /**
@@ -84,6 +93,7 @@ export class Validator {
    */
   setRules(field, rules, scope = 'default') {
     this.ruleManager.setFieldRules(field, rules, scope);
+    // notifyListeners() is called by ruleManager.subscribe() - no need to call again
     return this;
   }
 
@@ -95,6 +105,7 @@ export class Validator {
    */
   setMultipleRules(rulesObject, scope = 'default') {
     this.ruleManager.setMultipleFieldRules(rulesObject, scope);
+    // notifyListeners() is called by ruleManager.subscribe() - no need to call again
     return this;
   }
 
@@ -106,6 +117,7 @@ export class Validator {
    */
   setData(data, scope = 'default') {
     this.formManager.setFormData(data, scope);
+    // notifyListeners() is called by formManager.subscribe() - no need to call again
     return this;
   }
 
@@ -118,6 +130,7 @@ export class Validator {
    */
   setValue(field, value, scope = 'default') {
     this.formManager.setFieldValue(field, value, scope);
+    // notifyListeners() is called by formManager.subscribe() - no need to call again
     return this;
   }
 
@@ -149,6 +162,7 @@ export class Validator {
    */
   setFieldLabel(field, label, scope = 'default') {
     this.ruleManager.setFieldLabel(field, label, scope);
+    // notifyListeners() is called by ruleManager.subscribe() - no need to call again
     return this;
   }
 
@@ -174,6 +188,7 @@ export class Validator {
       this.errorBag.add(error.field, error.message, error.rule);
     });
 
+    // notifyListeners() is called by errorBag.add() - no need to call again
     return result.isValid;
   }
 
@@ -197,6 +212,7 @@ export class Validator {
     );
 
     const results = await Promise.all(validationPromises);
+    // notifyListeners() is called by validateField() -> errorBag.add() - no need to call again
     return results.every(result => result === true);
   }
 
@@ -250,6 +266,7 @@ export class Validator {
    */
   setLocale(locale) {
     this.i18nManager.setLocale(locale);
+    // notifyListeners() is called by i18nManager.subscribe() - no need to call again
     return this;
   }
 
@@ -269,6 +286,7 @@ export class Validator {
    */
   addMessages(locale, messages) {
     this.i18nManager.addMessages(locale, messages);
+    // notifyListeners() is called by i18nManager.subscribe() - no need to call again
     return this;
   }
 
@@ -280,6 +298,7 @@ export class Validator {
   reset(scope = 'all') {
     this.errorBag.clear();
     this.formManager.resetForm(scope);
+    // notifyListeners() is called by both errorBag.clear() and formManager.resetForm() - no need to call again
     return this;
   }
 
@@ -289,7 +308,10 @@ export class Validator {
    * @returns {Function} Unsubscribe function
    */
   subscribe(listener) {
-    return () => {}; // Placeholder for compatibility
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   /**
@@ -298,7 +320,16 @@ export class Validator {
    * @returns {void}
    */
   notifyListeners() {
-    // Implementation for reactive updates
+    // Skip notifications during initialization to prevent loops
+    if (this.isInitializing) return;
+    
+    this.listeners.forEach(listener => {
+      try {
+        listener();
+      } catch (error) {
+        console.warn('Validator listener error:', error);
+      }
+    });
   }
 
   /**

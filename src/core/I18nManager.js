@@ -11,8 +11,13 @@ export class I18nManager {
     this.fallbackLocale = 'en';
     this.messages = new Map(); // Map<locale, Map<key, message>>
     this.listeners = new Set();
+    this.isInitializing = true;
     
     this.loadDefaultMessages();
+    // Mark initialization as complete after a short delay
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 100);
   }
 
   /**
@@ -95,14 +100,15 @@ export class I18nManager {
 
   /**
    * Get a message for a specific rule
-   * Resolution order: `field.rule` -> `rule` -> default fallback message
+   * Resolution order: `field.rule` -> `rule` -> rule's fallback message -> default fallback message
    * @param {string} rule - The rule name
    * @param {string} field - The field name
    * @param {Object<string, any>} [params] - Parameters to substitute in the message
    * @param {string} [locale] - Optional locale override
+   * @param {string} [ruleFallbackMessage] - Fallback message from rule registration
    * @returns {string} The formatted message
    */
-  getMessage(rule, field, params = {}, locale = null) {
+  getMessage(rule, field, params = {}, locale = null, ruleFallbackMessage = null) {
     const targetLocale = locale ? locale.toLowerCase() : this.locale;
     const localeMessages = this.messages.get(targetLocale) || this.messages.get(this.fallbackLocale) || new Map();
     
@@ -112,6 +118,11 @@ export class I18nManager {
     // Fallback to rule-only message
     if (!message) {
       message = localeMessages.get(rule);
+    }
+
+    // Fallback to rule's registered fallback message
+    if (!message && ruleFallbackMessage) {
+      message = ruleFallbackMessage;
     }
 
     // Final fallback
@@ -128,10 +139,11 @@ export class I18nManager {
    * @param {string} field - Field name
    * @param {Object<string, any>} [params] - Parameters
    * @param {string} [locale] - Optional locale override
+   * @param {string} [ruleFallbackMessage] - Fallback message from rule registration
    * @returns {string} Formatted message
    */
-  t(rule, field, params = {}, locale = null) {
-    return this.getMessage(rule, field, params, locale);
+  t(rule, field, params = {}, locale = null, ruleFallbackMessage = null) {
+    return this.getMessage(rule, field, params, locale, ruleFallbackMessage);
   }
 
   /**
@@ -216,6 +228,9 @@ export class I18nManager {
    * @returns {void}
    */
   notifyListeners() {
+    // Skip notifications during initialization to prevent loops
+    if (this.isInitializing) return;
+    
     this.listeners.forEach(listener => listener());
   }
 

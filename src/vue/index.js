@@ -19,7 +19,7 @@ export { registerDirectives } from './directives.js';
 export { rulesDirective, validateDirective, errorDirective, labelDirective } from './directives.js';
 
 // Vue plugin
-export { createValidationPlugin, getGlobalValidator, setGlobalLocale, getGlobalLocale } from './plugin.js';
+export { createValidationPlugin, getGlobalValidator, setGlobalLocale, getGlobalLocale, useValidator } from './plugin.js';
 
 // Default plugin
 export { default as ValidationPlugin } from './plugin.js';
@@ -27,6 +27,9 @@ export { default as ValidationPlugin } from './plugin.js';
 // Export install function for plugin usage
 import ValidationPlugin from './plugin.js';
 export const install = ValidationPlugin.install.bind(ValidationPlugin);
+
+// Simplified plugin export for easy usage
+export const validator = ValidationPlugin;
 
 // Default export for plugin usage
 export default ValidationPlugin;

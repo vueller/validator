@@ -17,5 +17,8 @@ export * from './api/index.js';
 // Utilities
 export * from './utils/index.js';
 
+// Vue 3 integration
+export { validator, ValidationPlugin, createValidationPlugin } from './vue/index.js';
+
 // Default export
 export { Validator as default } from './core/index.js';

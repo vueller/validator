@@ -1,88 +1,49 @@
-# Introduction
+# Guide Overview
 
-@vueller/validator is a modern, framework-agnostic validation library designed to work seamlessly across different JavaScript environments. Whether you're building with vanilla JavaScript, Vue.js, React, or any other framework, @vueller/validator provides a consistent and powerful validation experience.
+Welcome to the @vueller/validator guide! This comprehensive documentation will help you master our modern validation library.
 
-## Key Features
+## Quick Navigation
 
-### 🌐 Universal Compatibility
-- **Framework Agnostic**: Works with any JavaScript framework or vanilla JS
-- **Consistent API**: Same validation logic across all environments
-- **No Dependencies**: Zero external dependencies in the core library
+### 🚀 **Getting Started**
+- [**Getting Started**](./getting-started.md) - Quick start with examples and key features
+- [**Installation**](./installation.md) - Detailed installation instructions
+- [**Basic Usage**](./basic-usage.md) - Core concepts and API fundamentals
 
-### ⚡ Reactive Validation
-- **Real-time Feedback**: Validate as users type or interact with forms
-- **Automatic UI Updates**: Built-in reactivity for Vue.js applications
-- **Manual Control**: Full control over when and how validation occurs
+### 🎯 **Framework Integration**
+- [**Vue Integration**](./vue-integration.md) - Vue 3 specific features and components
+- [**JavaScript Usage**](./javascript-usage.md) - Vanilla JavaScript implementation
 
-### 🎯 Scope-based Architecture
-- **Isolated Forms**: Multiple forms on the same page with separate validation states
-- **Global Rules**: Define validation rules once, use them across different scopes
-- **Flexible Data Management**: Each scope maintains its own form data and validation state
+### 🧩 **Advanced Features**
+- [**Custom Rules**](./custom-rules.md) - Creating and managing custom validation rules
+- [**Internationalization**](./internationalization.md) - Multi-language support and localization
+- [**Advanced Patterns**](./advanced-patterns.md) - Complex validation scenarios and best practices
 
-### 🧩 Extensible Design
-- **Custom Rules**: Easy to create and register custom validation rules
-- **Async Support**: Built-in support for asynchronous validation (API calls, etc.)
-- **Rule Composition**: Combine multiple rules for complex validation scenarios
+### 📚 **Reference**
+- [**API Reference**](./api-reference.md) - Complete API documentation
+- [**Validation Rules**](./validation-rules.md) - All available built-in rules
+- [**Examples**](./examples.md) - Real-world usage examples
 
-### 🌍 Internationalization
-- **Multi-language Support**: Built-in i18n system with locale switching
-- **Custom Messages**: Override default messages with your own
-- **Dynamic Loading**: Load language packs on demand
+## What's New in v2.0
 
-## How It Works
+### ✨ **Major Updates**
 
-@vueller/validator follows a simple but powerful pattern:
+- **Global Validator Instance**: Single validator shared across the entire application
+- **Simplified Vue Plugin**: Easy setup with `app.use(validator, options)`
+- **Enhanced Composables**: Modern Vue 3 Composition API integration
+- **Automatic Validation**: No need for `v-validate` directive on custom rules
+- **Improved Reactivity**: Better performance with optimized update cycles
+- **Custom Rule Messages**: Fallback message system with locale-specific overrides
 
-1. **Define Rules**: Set up validation rules for your form fields
-2. **Validate Data**: Pass your form data to the validator
-3. **Handle Results**: React to validation results and display errors
-4. **Scope Management**: Use scopes to manage multiple forms independently
+### 🔧 **Breaking Changes**
 
-```javascript
-// 1. Create validator and define rules
-const validator = createValidator();
-validator.setRules('email', { required: true, email: true });
+- **Plugin API**: New global plugin installation method
+- **Composable Changes**: Updated `useValidator()` composable
+- **Directive Updates**: Simplified directive usage
+- **Message System**: Enhanced fallback message resolution
 
-// 2. Validate data
-const isValid = await validator.validate({ email: 'user@example.com' });
+### 📖 **Migration Guide**
 
-// 3. Handle results
-if (!isValid) {
-  const errors = validator.errors().allByField();
-  console.log('Validation errors:', errors);
-}
-```
-
-## Architecture Overview
-
-```mermaid
-graph TB
-    A[Form Data] --> B[Validator]
-    B --> C[Rule Registry]
-    B --> D[Error Bag]
-    B --> E[I18n Manager]
-    
-    C --> F[Built-in Rules]
-    C --> G[Custom Rules]
-    
-    D --> H[Error Messages]
-    E --> I[Localized Messages]
-    
-    B --> J[Validation Result]
-    J --> K[Success/Failure]
-    J --> L[Error Details]
-```
-
-## Comparison with Other Libraries
-
-| Feature | @vueller/validator | VeeValidate | Vuelidate |
-|---------|-------------------|-------------|-----------|
-| Auto-validation | ✅ Zero config | ❌ Manual setup | ❌ Manual setup |
-| Vue 3 Composition API | ✅ Native | ✅ Supported | ✅ Supported |
-| Real-time Localization | ✅ Built-in | ✅ Built-in | ❌ External plugin |
-| CSS classes | ✅ Automatic | ❌ Manual | ❌ Manual |
-| Bundle size | ✅ Small | ⚠️ Medium | ✅ Small |
-| TypeScript | ✅ Full support | ✅ Full support | ✅ Full support |
+If you're upgrading from v1.x, check our [Migration Guide](./migration-guide.md) for detailed upgrade instructions.
 
 ## Philosophy
 
@@ -94,13 +55,24 @@ graph TB
 <input v-rules="{ required: true, email: true }" name="email" />
 ```
 
-## Getting Started
+### **Framework Agnostic Core**
+```javascript
+// Same validation logic works everywhere
+const validator = new Validator();
+validator.setRules('email', { required: true, email: true });
+```
 
-Ready to start validating? Head over to the [Installation Guide](./installation.md) to get @vueller/validator set up in your project.
+### **Reactive by Default**
+```vue
+<!-- Automatic UI updates -->
+<div v-if="errors.has('email')">{{ errors.first('email') }}</div>
+```
 
-## What's Next?
+## Getting Help
 
-- [**Installation**](./installation.md) - Get @vueller/validator installed and configured
-- [**Basic Usage**](./basic-usage.md) - Learn the fundamental concepts and API
-- [**Validation Rules**](./validation-rules.md) - Explore all available validation rules
-- [**Advanced Guide**](./advanced.md) - Deep dive into advanced patterns and techniques
+- 📖 **Documentation**: Comprehensive guides and API reference
+- 💬 **Community**: Join our discussions on GitHub
+- 🐛 **Issues**: Report bugs and request features
+- 💡 **Examples**: Check out real-world usage examples
+
+Ready to start? Head over to [Getting Started](./getting-started.md) to begin your validation journey!

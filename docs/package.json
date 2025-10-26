@@ -1,6 +1,6 @@
 {
-  "name": "docs",
-  "version": "1.0.0",
+  "name": "@vueller/validator-docs",
+  "version": "2.0.0",
   "type": "module",
   "main": "index.js",
   "directories": {
@@ -11,10 +11,17 @@
     "build": "vitepress build",
     "preview": "vitepress preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "validation",
+    "vue",
+    "javascript",
+    "forms",
+    "i18n",
+    "reactive"
+  ],
+  "author": "Vueller Team",
+  "license": "MIT",
+  "description": "Documentation for @vueller/validator - Modern validation library for JavaScript and Vue 3",
   "devDependencies": {
     "vitepress": "^1.6.4"
   }

@@ -4,9 +4,9 @@ import vue from 'rollup-plugin-vue';
 import postcss from 'rollup-plugin-postcss';
 
 export default [
-  // ESM build
+  // ESM build (core only, no Vue)
   {
-    input: 'src/index.js',
+    input: 'src/core/index.js',
     output: {
       file: 'dist/validator.esm.js',
       format: 'es',
@@ -15,9 +15,9 @@ export default [
     plugins: [nodeResolve(), commonjs()],
     external: []
   },
-  // CommonJS build
+  // CommonJS build (core only, no Vue)
   {
-    input: 'src/index.js',
+    input: 'src/core/index.js',
     output: {
       file: 'dist/validator.cjs.js',
       format: 'cjs',

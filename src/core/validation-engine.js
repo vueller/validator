@@ -122,7 +122,8 @@ export class ValidationEngine {
   getErrorMessage(rule, fieldName) {
     const ruleName = rule.getRuleName?.() || 'invalid';
     const params = { ...(rule.params || {}) };
+    const ruleFallbackMessage = rule.message || null;
     
-    return this.i18nManager.getMessage(ruleName, fieldName, params);
+    return this.i18nManager.getMessage(ruleName, fieldName, params, null, ruleFallbackMessage);
   }
 }

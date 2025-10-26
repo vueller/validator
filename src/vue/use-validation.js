@@ -1,34 +1,57 @@
 /**
- * useValidation - Simplified Vue 3 composable for form validation
- * Clean, intuitive API for reactive form validation
+ * useValidation - Modern Vue 3 composable for form validation
+ * Following Vue.js source code patterns and modern practices
  */
 
-import { ref, computed, reactive, provide, inject } from 'vue';
+import { 
+  ref, 
+  computed, 
+  reactive, 
+  provide, 
+  inject, 
+  getCurrentInstance,
+  unref,
+  watchEffect,
+  watch,
+  nextTick,
+  toRefs,
+  readonly
+} from 'vue';
 import { Validator } from '../core/validator.js';
+import { VALIDATOR_INJECTION_KEY } from './plugin.js';
 
-// Symbol for providing validator instance
-export const ValidatorSymbol = Symbol('validator');
+// Symbol for providing validator instance (legacy support)
+export const ValidatorSymbol = VALIDATOR_INJECTION_KEY;
 
 /**
- * Main composable for form validation
+ * Main composable for form validation following Vue patterns
  * @param {Object} options - Validation options
  * @returns {Object} Validation utilities and state
  */
 export function useValidation(options = {}) {
-  const validator = new Validator(options);
+  const instance = getCurrentInstance();
+  if (!instance) {
+    throw new Error('useValidation must be called within a component setup function');
+  }
+
+  // Try to get global validator first, fallback to creating new one
+  const globalValidator = inject(VALIDATOR_INJECTION_KEY, null);
+  const validator = globalValidator || new Validator(options);
+  
+  // Force update trigger for reactivity
   const forceUpdate = ref(0);
 
-  // Reactive state
+  // Reactive state following Vue patterns
   const state = reactive({
     isValidating: false,
-    isValid: true,
-    hasErrors: false,
-    formData: {},
-    locale: 'en'
+    isValid: validator.isValid(),
+    hasErrors: validator.hasErrors(),
+    formData: validator.getData(),
+    locale: validator.getLocale()
   });
 
-  // Subscribe to validator changes
-  validator.subscribe(() => {
+  // Subscribe to validator changes with proper cleanup
+  const unsubscribe = validator.subscribe(() => {
     forceUpdate.value++;
     updateState();
   });
@@ -42,40 +65,27 @@ export function useValidation(options = {}) {
   // Initialize state
   updateState();
 
-  // Reactive errors - proxy to ErrorBag methods
-  const errors = {
-    has: (field) => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.has(field);
-    },
-    first: (field) => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.first(field);
-    },
-    get: (field) => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.get(field);
-    },
-    all: () => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.all();
-    },
-    allByField: () => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.allByField();
-    },
-    any: () => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.any();
-    },
-    clear: () => validator.errorBag.clear(),
-    keys: () => {
-      forceUpdate.value; // Trigger reactivity
-      return validator.errorBag.keys();
-    }
-  };
+  // Cleanup on unmount
+  if (instance) {
+    instance.scope.stop(unsubscribe);
+  }
 
-  // Reactive form data
+  // Reactive errors following Vue patterns
+  const errors = computed(() => {
+    forceUpdate.value; // Trigger reactivity
+    return {
+      has: (field) => validator.errorBag.has(field),
+      first: (field) => validator.errorBag.first(field),
+      get: (field) => validator.errorBag.get(field),
+      all: () => validator.errorBag.all(),
+      allByField: () => validator.errorBag.allByField(),
+      any: () => validator.errorBag.any(),
+      clear: () => validator.errorBag.clear(),
+      keys: () => validator.errorBag.keys()
+    };
+  });
+
+  // Reactive form data with proper reactivity
   const formData = computed({
     get: () => {
       forceUpdate.value; // Trigger reactivity
@@ -86,27 +96,45 @@ export function useValidation(options = {}) {
     }
   });
 
-  // Validation methods
+  // Validation methods with modern patterns
   const validate = async (scope = 'default') => {
-    return await validator.validate(scope);
+    state.isValidating = true;
+    try {
+      const result = await validator.validate(scope);
+      return result;
+    } finally {
+      state.isValidating = false;
+    }
   };
 
   const validateField = async (field, scope = 'default') => {
-    return await validator.validateField(field, scope);
+    state.isValidating = true;
+    try {
+      const result = await validator.validateField(field, scope);
+      return result;
+    } finally {
+      state.isValidating = false;
+    }
   };
 
-  // Rules management
+  // Rules management with reactivity
   const setRules = (field, rules, scope = 'default') => {
-    return validator.setRules(field, rules, scope);
+    const result = validator.setRules(field, rules, scope);
+    forceUpdate.value++; // Trigger reactivity
+    return result;
   };
 
   const setMultipleRules = (rulesObject, scope = 'default') => {
-    return validator.setMultipleRules(rulesObject, scope);
+    const result = validator.setMultipleRules(rulesObject, scope);
+    forceUpdate.value++; // Trigger reactivity
+    return result;
   };
 
-  // Data management
+  // Data management with reactivity
   const setValue = (field, value, scope = 'default') => {
-    return validator.setValue(field, value, scope);
+    const result = validator.setValue(field, value, scope);
+    forceUpdate.value++; // Trigger reactivity
+    return result;
   };
 
   const getValue = (field, scope = 'default') => {
@@ -118,7 +146,7 @@ export function useValidation(options = {}) {
     return validator.setFieldLabel(field, label, scope);
   };
 
-  // Error utilities
+  // Error utilities with reactivity
   const hasError = (field) => {
     forceUpdate.value; // Trigger reactivity
     return validator.errors().has(field);
@@ -131,48 +159,68 @@ export function useValidation(options = {}) {
 
   const clearErrors = () => {
     validator.errors().clear();
+    forceUpdate.value++; // Trigger reactivity
   };
 
   // I18n utilities
   const setLocale = (locale) => {
     validator.setLocale(locale);
+    forceUpdate.value++; // Trigger reactivity
   };
 
   const addMessages = (locale, messages) => {
     validator.addMessages(locale, messages);
+    forceUpdate.value++; // Trigger reactivity
   };
 
-  // Reset
+  // Reset with reactivity
   const reset = (scope = 'all') => {
     validator.reset(scope);
+    forceUpdate.value++; // Trigger reactivity
   };
 
   // Provide validator for child components
   provide(ValidatorSymbol, validator);
 
+  // Computed properties following Vue patterns
+  const isValid = computed(() => state.isValid);
+  const hasErrors = computed(() => state.hasErrors);
+  const isValidating = computed(() => state.isValidating);
+  const locale = computed(() => state.locale);
+
   return {
-    // State
+    // Reactive state
     state: readonly(state),
     errors,
     formData,
-    isValid: computed(() => state.isValid),
-    hasErrors: computed(() => state.hasErrors),
-    isValidating: computed(() => state.isValidating),
-    locale: computed(() => state.locale),
+    isValid,
+    hasErrors,
+    isValidating,
+    locale,
 
-    // Methods
+    // Validation methods
     validate,
     validateField,
+    
+    // Rules management
     setRules,
     setMultipleRules,
+    
+    // Data management
     setValue,
     getValue,
     setFieldLabel,
+    
+    // Error utilities
     hasError,
     getError,
     clearErrors,
+    
+    // I18n utilities
     setLocale,
     addMessages,
+    
+    // Utilities
     reset,
 
     // Direct access to validator instance
@@ -181,30 +229,49 @@ export function useValidation(options = {}) {
 }
 
 /**
- * Use validation from parent component
+ * Use validation from parent component (modern approach)
  * @returns {Object} Validation utilities
  */
 export function useValidationFromParent() {
-  const validator = inject(ValidatorSymbol);
+  const instance = getCurrentInstance();
+  if (!instance) {
+    throw new Error('useValidationFromParent must be called within a component setup function');
+  }
+
+  const validator = inject(VALIDATOR_INJECTION_KEY);
   
   if (!validator) {
-    throw new Error('useValidationFromParent must be used within a component that has useValidation');
+    throw new Error('useValidationFromParent must be used within a component that has the validator plugin installed');
   }
 
   const forceUpdate = ref(0);
 
-  // Subscribe to changes
-  validator.subscribe(() => {
+  // Subscribe to changes with proper cleanup
+  const unsubscribe = validator.subscribe(() => {
     forceUpdate.value++;
   });
 
-  // Reactive errors
+  // Cleanup on unmount
+  if (instance) {
+    instance.scope.stop(unsubscribe);
+  }
+
+  // Reactive errors following Vue patterns
   const errors = computed(() => {
     forceUpdate.value; // Trigger reactivity
-    return validator.errors().allByField();
+    return {
+      has: (field) => validator.errors().has(field),
+      first: (field) => validator.errors().first(field),
+      get: (field) => validator.errors().get(field),
+      all: () => validator.errors().all(),
+      allByField: () => validator.errors().allByField(),
+      any: () => validator.errors().any(),
+      clear: () => validator.errors().clear(),
+      keys: () => validator.errors().keys()
+    };
   });
 
-  // Error utilities
+  // Error utilities with reactivity
   const hasError = (field) => {
     forceUpdate.value; // Trigger reactivity
     return validator.errors().has(field);
@@ -224,17 +291,22 @@ export function useValidationFromParent() {
 }
 
 /**
- * Field validation composable
+ * Field validation composable following Vue patterns
  * @param {string} field - Field name
  * @param {string|Object|Array} rules - Validation rules
  * @param {Object} options - Options
  * @returns {Object} Field validation utilities
  */
 export function useFieldValidation(field, rules, options = {}) {
-  const validator = inject(ValidatorSymbol);
+  const instance = getCurrentInstance();
+  if (!instance) {
+    throw new Error('useFieldValidation must be called within a component setup function');
+  }
+
+  const validator = inject(VALIDATOR_INJECTION_KEY);
   
   if (!validator) {
-    throw new Error('useFieldValidation must be used within a component that has useValidation');
+    throw new Error('useFieldValidation must be used within a component that has the validator plugin installed');
   }
 
   const forceUpdate = ref(0);
@@ -244,12 +316,17 @@ export function useFieldValidation(field, rules, options = {}) {
     validator.setRules(field, rules, options.scope);
   }
 
-  // Subscribe to changes
-  validator.subscribe(() => {
+  // Subscribe to changes with proper cleanup
+  const unsubscribe = validator.subscribe(() => {
     forceUpdate.value++;
   });
 
-  // Reactive field state
+  // Cleanup on unmount
+  if (instance) {
+    instance.scope.stop(unsubscribe);
+  }
+
+  // Reactive field state following Vue patterns
   const fieldState = computed(() => {
     forceUpdate.value; // Trigger reactivity
     return {
@@ -260,37 +337,42 @@ export function useFieldValidation(field, rules, options = {}) {
     };
   });
 
-  // Field methods
+  // Field methods with reactivity
   const setValue = (value) => {
     validator.setValue(field, value, options.scope);
+    forceUpdate.value++; // Trigger reactivity
   };
 
   const validate = async () => {
-    return await validator.validateField(field, options.scope);
+    const result = await validator.validateField(field, options.scope);
+    forceUpdate.value++; // Trigger reactivity
+    return result;
   };
 
   const setLabel = (label) => {
     validator.setFieldLabel(field, label, options.scope);
+    forceUpdate.value++; // Trigger reactivity
   };
+
+  // Destructure fieldState for easier access
+  const { value, error, hasError, isValid } = toRefs(fieldState);
 
   return {
-    ...fieldState.value,
+    // Reactive field state
+    value,
+    error,
+    hasError,
+    isValid,
+    fieldState,
+    
+    // Field methods
     setValue,
     validate,
-    setLabel,
-    fieldState
+    setLabel
   };
 }
 
-// Helper for readonly
-function readonly(obj) {
-  return new Proxy(obj, {
-    set() {
-      console.warn('Cannot modify readonly validation state');
-      return false;
-    }
-  });
-}
+// Using Vue's readonly helper - no custom implementation needed
 
 // Alias for backward compatibility
 export { useValidation as useValidator };
